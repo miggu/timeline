@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { TimelineRow } from "./components/TimelineRow";
+import { SettingsPanel } from "./components/SettingsPanel";
 
 const App: React.FC = () => {
-	const years = Array.from({ length: 2026 - 2018 + 1 }, (_, i) => 2018 + i);
+	const currentYear = 2026;
+	const [yearsToDisplay, setYearsToDisplay] = useState<number>(3); // Default to 3 years
+
+	// Calculate the array of years to map over
+	const years = Array.from(
+		{ length: yearsToDisplay },
+		(_, i) => currentYear - (yearsToDisplay - 1) + i,
+	);
 
 	const [events, setEvents] = useState([
 		{ id: "e1", year: 2024, leftPercent: 10, widthPercent: 15 },
@@ -40,6 +48,10 @@ const App: React.FC = () => {
 
 	return (
 		<div className="timeline-card">
+			<SettingsPanel
+				yearsToDisplay={yearsToDisplay}
+				setYearsToDisplay={setYearsToDisplay}
+			/>
 			<h1>THIS IS YOUR LIFE.</h1>
 
 			<div className="subtitle">
