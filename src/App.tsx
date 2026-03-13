@@ -12,6 +12,8 @@ import { EventBlockOverlay } from "./components/EventBlock";
 import { SettingsPanel } from "./components/SettingsPanel";
 import {
 	EVENT_BLOCK_TOP,
+	LOG_EVENT_WIDTH_PERCENT,
+	findNextEventPlacement,
 	moveTimelineEventToWeek,
 	resizeTimelineEvent,
 	type ResizeEdge,
@@ -83,9 +85,9 @@ const App: React.FC = () => {
 	);
 
 	const [events, setEvents] = useState<TimelineEvent[]>([
-		{ id: "e1", year: 2024, leftPercent: 10, widthPercent: 15 },
-		{ id: "e2", year: 2025, leftPercent: 75, widthPercent: 12 },
-		{ id: "e3", year: 2019, leftPercent: 30, widthPercent: 8 },
+		{ id: "e1", year: 2024, leftPercent: 10, widthPercent: 15, colorIndex: 0 },
+		{ id: "e2", year: 2025, leftPercent: 75, widthPercent: 12, colorIndex: 1 },
+		{ id: "e3", year: 2019, leftPercent: 30, widthPercent: 8, colorIndex: 2 },
 	]);
 	const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
 	const [activeResize, setActiveResize] = useState<ActiveResizeState | null>(
@@ -233,6 +235,32 @@ const App: React.FC = () => {
 		clearActiveDrag();
 	};
 
+	const handleLogEvent = () => {
+		setEvents((prev) => {
+			const candidateYears = [...years].reverse();
+			const placement = findNextEventPlacement(
+				prev,
+				candidateYears,
+				LOG_EVENT_WIDTH_PERCENT,
+			);
+
+			if (!placement) {
+				return prev;
+			}
+
+			return [
+				...prev,
+				{
+					id: `e${prev.length + 1}`,
+					year: placement.year,
+					leftPercent: placement.leftPercent,
+					widthPercent: LOG_EVENT_WIDTH_PERCENT,
+					colorIndex: prev.length,
+				},
+			];
+		});
+	};
+
 	return (
 		<div className="timeline-card">
 			<SettingsPanel
@@ -277,13 +305,16 @@ const App: React.FC = () => {
 						<EventBlockOverlay
 							width={activeDrag.width}
 							height={activeDrag.height}
+							colorIndex={activeEvent.colorIndex}
 						/>
 					) : null}
 				</DragOverlay>
 			</DndContext>
 
 			<div className="controls-container">
-				<button className="btn-primary">Log Event</button>
+				<button className="btn-primary" onClick={handleLogEvent} type="button">
+					Log Event
+				</button>
 				<div className="pagination">
 					<button className="btn-icon">←</button>
 					<button className="btn-icon">Next →</button>

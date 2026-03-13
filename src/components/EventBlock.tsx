@@ -1,6 +1,6 @@
 import React from "react";
 import { useDraggable } from "@dnd-kit/core";
-import type { ResizeEdge } from "../timeline";
+import { getEventPaletteColor, type ResizeEdge } from "../timeline";
 
 // SVG Icons
 const ChevronLeft = () => (
@@ -18,6 +18,7 @@ interface EventBlockProps {
 	id: string;
 	leftPercent: number;
 	widthPercent: number;
+	colorIndex: number;
 	isResizeActive: boolean;
 	onResizeStart: (
 		id: string,
@@ -30,7 +31,13 @@ interface EventBlockProps {
 interface EventBlockOverlayProps {
 	width: number;
 	height: number;
+	colorIndex: number;
 }
+
+type EventBlockStyle = React.CSSProperties & {
+	"--event-color"?: string;
+	"--event-glow"?: string;
+};
 
 const EventBlockChrome = () => (
 	<>
@@ -47,6 +54,7 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 	id,
 	leftPercent,
 	widthPercent,
+	colorIndex,
 	isResizeActive,
 	onResizeStart,
 }) => {
@@ -75,7 +83,9 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 			);
 		};
 
-	const style: React.CSSProperties = {
+	const paletteColor = getEventPaletteColor(colorIndex);
+
+	const style: EventBlockStyle = {
 		left: `${leftPercent}%`,
 		width: `${widthPercent}%`,
 		transform: transform
@@ -84,6 +94,8 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 		zIndex: isDragging ? 100 : 10,
 		opacity: isDragging ? 0 : 1,
 		transition: isDragging ? "none" : undefined,
+		"--event-color": paletteColor.color,
+		"--event-glow": paletteColor.glow,
 	};
 
 	return (
@@ -113,15 +125,18 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 export const EventBlockOverlay: React.FC<EventBlockOverlayProps> = ({
 	width,
 	height,
+	colorIndex,
 }) => {
+	const paletteColor = getEventPaletteColor(colorIndex);
+	const style: EventBlockStyle = {
+		width,
+		height,
+		"--event-color": paletteColor.color,
+		"--event-glow": paletteColor.glow,
+	};
+
 	return (
-		<div
-			className="event-block event-block-overlay"
-			style={{
-				width,
-				height,
-			}}
-		>
+		<div className="event-block event-block-overlay" style={style}>
 			<EventBlockChrome />
 		</div>
 	);
