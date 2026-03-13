@@ -1,6 +1,7 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { EventBlock } from "./EventBlock";
+import type { ResizeEdge, TimelineEvent } from "../timeline";
 
 const WeekCell: React.FC<{ weekNumber: number; year: number }> = ({
 	weekNumber,
@@ -25,12 +26,21 @@ const WeekCell: React.FC<{ weekNumber: number; year: number }> = ({
 
 interface TimelineRowProps {
 	year: number;
-	events?: { id: string; leftPercent: number; widthPercent: number }[];
+	events?: TimelineEvent[];
+	activeResizeId: string | null;
+	onResizeStart: (
+		id: string,
+		edge: ResizeEdge,
+		clientX: number,
+		trackWidth: number,
+	) => void;
 }
 
 export const TimelineRow: React.FC<TimelineRowProps> = ({
 	year,
 	events = [],
+	activeResizeId,
+	onResizeStart,
 }) => {
 	return (
 		<div className="timeline-row" id={`row-${year}`}>
@@ -65,7 +75,12 @@ export const TimelineRow: React.FC<TimelineRowProps> = ({
 				))}
 
 				{events.map((event) => (
-					<EventBlock key={event.id} {...event} />
+					<EventBlock
+						key={event.id}
+						{...event}
+						isResizeActive={activeResizeId === event.id}
+						onResizeStart={onResizeStart}
+					/>
 				))}
 			</div>
 		</div>
