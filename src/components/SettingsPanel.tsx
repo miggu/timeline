@@ -1,13 +1,18 @@
 import React from "react";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 interface SettingsPanelProps {
 	yearsToDisplay: number;
 	setYearsToDisplay: (years: number) => void;
+	isDarkMode: boolean;
+	setIsDarkMode: (isDarkMode: boolean) => void;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 	yearsToDisplay,
 	setYearsToDisplay,
+	isDarkMode,
+	setIsDarkMode,
 }) => {
 	return (
 		<div className="settings-panel">
@@ -31,6 +36,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 					<option value={5}>5 Years</option>
 					<option value={9}>9 Years (Since 2018)</option>
 				</select>
+			</div>
+
+			<div className="settings-group">
+				<div className="settings-toggle-row">
+					<label htmlFor="dark-mode-switch">Dark mode</label>
+					<ThemeSwitch
+						id="dark-mode-switch"
+						checked={isDarkMode}
+						onChange={setIsDarkMode}
+					/>
+				</div>
 			</div>
 		</div>
 	);

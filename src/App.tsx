@@ -18,6 +18,8 @@ import {
 	type TimelineEvent,
 } from "./timeline";
 
+type ThemeMode = "light" | "dark";
+
 interface ActiveDragState {
 	id: string;
 	width: number;
@@ -51,9 +53,28 @@ const snapDragToRow: Modifier = ({ transform, activeNodeRect, over }) => {
 	};
 };
 
+const THEME_STORAGE_KEY = "timeline-theme";
+
+const getInitialThemeMode = (): ThemeMode => {
+	if (typeof window === "undefined") {
+		return "light";
+	}
+
+	const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+
+	if (storedTheme === "light" || storedTheme === "dark") {
+		return storedTheme;
+	}
+
+	return window.matchMedia("(prefers-color-scheme: dark)").matches
+		? "dark"
+		: "light";
+};
+
 const App: React.FC = () => {
 	const currentYear = 2026;
 	const [yearsToDisplay, setYearsToDisplay] = useState<number>(3); // Default to 3 years
+	const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
 
 	// Calculate the array of years to map over
 	const years = Array.from(
@@ -131,6 +152,12 @@ const App: React.FC = () => {
 			trackWidth,
 		});
 	};
+
+	useEffect(() => {
+		document.documentElement.dataset.theme = themeMode;
+		document.documentElement.style.colorScheme = themeMode;
+		window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+	}, [themeMode]);
 
 	useEffect(() => {
 		if (!activeResize) {
@@ -211,6 +238,10 @@ const App: React.FC = () => {
 			<SettingsPanel
 				yearsToDisplay={yearsToDisplay}
 				setYearsToDisplay={setYearsToDisplay}
+				isDarkMode={themeMode === "dark"}
+				setIsDarkMode={(isDarkMode) =>
+					setThemeMode(isDarkMode ? "dark" : "light")
+				}
 			/>
 			<h1>THIS IS YOUR LIFE.</h1>
 

@@ -36,16 +36,44 @@
 }
 
 :root {
+	color-scheme: light;
 	--bg-color: #fafafa;
-	--panel-bg: #ffffff;
-	--text-primary: #064e3b;
+	--theme-blue-1: #5679a6;
+	--theme-blue-2: #6394bf;
+	--theme-olive: #62733f;
+	--theme-gold-1: #d99b29;
+	--theme-gold-2: #a6771f;
+	--text-primary: var(--theme-blue-1);
 	--text-secondary: #64748b;
-	--accent-green: #00ba3f; /* This matches the bright reference green */
-	--accent-green-hover: #00a438;
-	--accent-glow: rgba(0, 186, 63, 0.4);
+	--accent-color: var(--theme-blue-1);
+	--accent-color-hover: var(--theme-blue-2);
+	--accent-glow: rgba(86, 121, 166, 0.28);
 	--border-color: #e2e8f0;
 	--track-bg: #f1f5f9;
 	--track-border: #e2e8f0;
+	--surface-bg: #ffffff;
+	--surface-hover: #edf3f9;
+	--surface-elevated: rgba(255, 255, 255, 0.85);
+	--handle-bg: #ffffff;
+	--panel-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+	color-scheme: dark;
+	--bg-color: #0f1620;
+	--text-primary: #edf4fb;
+	--text-secondary: #9fb2ca;
+	--accent-color: var(--theme-blue-2);
+	--accent-color-hover: #84b1d8;
+	--accent-glow: rgba(99, 148, 191, 0.34);
+	--border-color: rgba(99, 148, 191, 0.2);
+	--track-bg: #182331;
+	--track-border: rgba(99, 148, 191, 0.12);
+	--surface-bg: #15202d;
+	--surface-hover: #1c2a3b;
+	--surface-elevated: rgba(17, 25, 36, 0.88);
+	--handle-bg: #f5f8fc;
+	--panel-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
 }
 
 * {
@@ -101,7 +129,7 @@ h1 {
 }
 
 .subtitle .badge {
-	background: var(--accent-green);
+	background: var(--accent-color);
 	color: white;
 	padding: 0.2rem 0.8rem;
 	border-radius: 100px;
@@ -114,7 +142,7 @@ svg {
 	width: 1.2rem;
 	height: 1.2rem;
 	fill: none;
-	stroke: var(--accent-green);
+	stroke: var(--accent-color);
 	stroke-width: 2;
 	stroke-linecap: round;
 	stroke-linejoin: round;
@@ -186,7 +214,7 @@ svg {
 	position: absolute;
 	top: 10px;
 	height: 24px;
-	background-color: var(--accent-green);
+	background-color: var(--accent-color);
 	border-radius: 6px;
 	box-shadow: 0 8px 20px -4px var(--accent-glow);
 	cursor: grab;
@@ -230,20 +258,20 @@ svg {
 .resize-handle {
 	width: 16px;
 	height: 16px;
-	background-color: white;
+	background-color: var(--handle-bg);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	cursor: ew-resize;
-	color: var(--accent-green);
+	color: var(--accent-color);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .resize-handle svg {
 	width: 12px;
 	height: 12px;
-	stroke: var(--accent-green);
+	stroke: var(--accent-color);
 }
 
 /* Controls */
@@ -255,9 +283,9 @@ svg {
 }
 
 .btn-primary {
-	background: white;
-	border: 1px solid var(--accent-green);
-	color: var(--accent-green);
+	background: var(--surface-bg);
+	border: 1px solid var(--accent-color);
+	color: var(--accent-color);
 	padding: 0.6rem 2rem;
 	border-radius: 100px;
 	font-size: 0.95rem;
@@ -268,7 +296,7 @@ svg {
 }
 
 .btn-primary:hover {
-	background: var(--track-bg);
+	background: color-mix(in srgb, var(--accent-color-hover) 12%, white);
 }
 
 .pagination {
@@ -277,8 +305,8 @@ svg {
 }
 
 .btn-icon {
-	background: white;
-	border: 1px solid #cbd5e1;
+	background: var(--surface-bg);
+	border: 1px solid var(--border-color);
 	color: var(--text-secondary);
 	padding: 0.4rem 1.2rem;
 	border-radius: 100px;
@@ -312,12 +340,12 @@ svg {
 	position: fixed;
 	top: 1.5rem;
 	right: 1.5rem;
-	background: rgba(255, 255, 255, 0.85);
+	background: var(--surface-elevated);
 	backdrop-filter: blur(12px);
 	border: 1px solid var(--border-color);
 	border-radius: 12px;
 	padding: 1rem;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+	box-shadow: var(--panel-shadow);
 	z-index: 1000;
 	min-width: 200px;
 }
@@ -348,6 +376,13 @@ svg {
 	gap: 0.4rem;
 }
 
+.settings-toggle-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
 .settings-group label {
 	font-size: 0.8rem;
 	color: var(--text-secondary);
@@ -357,7 +392,7 @@ svg {
 	padding: 0.5rem;
 	border: 1px solid var(--border-color);
 	border-radius: 6px;
-	background: white;
+	background: var(--surface-bg);
 	color: var(--text-primary);
 	font-family: inherit;
 	font-size: 0.85rem;
@@ -366,5 +401,53 @@ svg {
 }
 
 .settings-select:focus {
-	border-color: var(--accent-green);
+	border-color: var(--accent-color);
+}
+
+.theme-switch {
+	border: 0;
+	background: transparent;
+	padding: 0;
+	cursor: pointer;
+}
+
+.theme-switch-track {
+	width: 48px;
+	height: 28px;
+	border-radius: 999px;
+	background: var(--surface-bg);
+	border: 1px solid var(--border-color);
+	display: flex;
+	align-items: center;
+	padding: 3px;
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		box-shadow 0.2s ease;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.theme-switch-thumb {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: var(--accent-color);
+	transform: translateX(0);
+	transition:
+		transform 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.theme-switch.is-checked .theme-switch-track {
+	background: color-mix(in srgb, var(--accent-color) 18%, var(--surface-bg));
+	border-color: color-mix(in srgb, var(--accent-color) 30%, var(--border-color));
+}
+
+.theme-switch.is-checked .theme-switch-thumb {
+	transform: translateX(20px);
+}
+
+.theme-switch:focus-visible .theme-switch-track {
+	outline: 2px solid color-mix(in srgb, var(--accent-color) 55%, white);
+	outline-offset: 2px;
 }
