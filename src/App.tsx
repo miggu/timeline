@@ -9,15 +9,14 @@ import {
 } from "@dnd-kit/core";
 import { TimelineRow } from "./components/TimelineRow";
 import { EventBlockOverlay } from "./components/EventBlock";
-import { SettingsPanel } from "./components/SettingsPanel";
+import { Settings } from "./components/Settings";
+import type { ResizeEdge, TimelineEvent } from "./types";
 import {
 	EVENT_BLOCK_TOP,
 	LOG_EVENT_WIDTH_PERCENT,
 	findNextEventPlacement,
 	moveTimelineEventToWeek,
 	resizeTimelineEvent,
-	type ResizeEdge,
-	type TimelineEvent,
 } from "./timeline";
 
 type ThemeMode = "light" | "dark";
@@ -104,9 +103,11 @@ const App: React.FC = () => {
 		const dragTarget = event.activatorEvent.target;
 		const blockElement =
 			dragTarget instanceof Element
-				? (dragTarget.closest(".event-block") as HTMLElement | null)
+				? (dragTarget.closest(".timeline-event") as HTMLElement | null)
 				: null;
-		const trackElement = blockElement?.closest(".track") as HTMLElement | null;
+		const trackElement = blockElement?.closest(".timeline-row__track") as
+			| HTMLElement
+			| null;
 		const initialRect =
 			event.active.rect.current.initial ?? event.active.rect.current.translated;
 		const measuredWidth =
@@ -262,8 +263,8 @@ const App: React.FC = () => {
 	};
 
 	return (
-		<div className="timeline-card">
-			<SettingsPanel
+		<div className="timeline">
+			<Settings
 				yearsToDisplay={yearsToDisplay}
 				setYearsToDisplay={setYearsToDisplay}
 				isDarkMode={themeMode === "dark"}
@@ -271,9 +272,9 @@ const App: React.FC = () => {
 					setThemeMode(isDarkMode ? "dark" : "light")
 				}
 			/>
-			<h1>THIS IS YOUR LIFE.</h1>
+			<h1 className="timeline__title">THIS IS YOUR LIFE.</h1>
 
-			<div className="subtitle">
+			<div className="timeline__subtitle">
 				<span>
 					A retrospective look at what you have been doing all this time.
 				</span>
@@ -285,7 +286,7 @@ const App: React.FC = () => {
 				onDragEnd={handleDragEnd}
 				onDragCancel={clearActiveDrag}
 			>
-				<div className="timeline-container">
+				<div className="timeline__rows">
 					{years.map((year) => (
 						<TimelineRow
 							key={year}
@@ -311,13 +312,21 @@ const App: React.FC = () => {
 				</DragOverlay>
 			</DndContext>
 
-			<div className="controls-container">
-				<button className="btn-primary" onClick={handleLogEvent} type="button">
+			<div className="timeline-controls">
+				<button
+					className="timeline-controls__primary"
+					onClick={handleLogEvent}
+					type="button"
+				>
 					Log Event
 				</button>
-				<div className="pagination">
-					<button className="btn-icon">←</button>
-					<button className="btn-icon">Next →</button>
+				<div className="timeline-controls__pagination">
+					<button className="timeline-controls__page-button" type="button">
+						←
+					</button>
+					<button className="timeline-controls__page-button" type="button">
+						Next →
+					</button>
 				</div>
 			</div>
 		</div>

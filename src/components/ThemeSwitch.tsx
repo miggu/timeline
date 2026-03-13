@@ -15,14 +15,14 @@ export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({
 		<button
 			id={id}
 			type="button"
-			className={`theme-switch${checked ? " is-checked" : ""}`}
+			className={`theme-switch${checked ? " theme-switch--checked" : ""}`}
 			role="switch"
 			aria-checked={checked}
 			aria-label={`Turn ${checked ? "off" : "on"} dark mode`}
 			onClick={() => onChange(!checked)}
 		>
-			<span className="theme-switch-track">
-				<span className="theme-switch-thumb" />
+			<span className="theme-switch__track">
+				<span className="theme-switch__thumb" />
 			</span>
 		</button>
 	);

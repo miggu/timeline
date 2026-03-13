@@ -1,12 +1,4 @@
-export interface TimelineEvent {
-	id: string;
-	year: number;
-	leftPercent: number;
-	widthPercent: number;
-	colorIndex: number;
-}
-
-export type ResizeEdge = "start" | "end";
+import type { ResizeEdge, TimelineEvent } from "./types";
 
 export const WEEK_COUNT = 52;
 export const WEEK_PERCENT = 100 / WEEK_COUNT;

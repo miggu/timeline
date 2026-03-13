@@ -1,7 +1,7 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { EventBlock } from "./EventBlock";
-import type { ResizeEdge, TimelineEvent } from "../timeline";
+import type { ResizeEdge, TimelineEvent } from "../types";
 
 const WeekCell: React.FC<{ weekNumber: number; year: number }> = ({
 	weekNumber,
@@ -14,12 +14,8 @@ const WeekCell: React.FC<{ weekNumber: number; year: number }> = ({
 	return (
 		<div
 			ref={setNodeRef}
-			className="week-segment"
+			className={`timeline-row__week${isOver ? " timeline-row__week--active" : ""}`}
 			data-week={weekNumber}
-			style={{
-				backgroundColor: isOver ? "var(--track-border)" : "transparent",
-				transition: "background-color 0.2s ease",
-			}}
 		/>
 	);
 };
@@ -44,32 +40,24 @@ export const TimelineRow: React.FC<TimelineRowProps> = ({
 }) => {
 	return (
 		<div className="timeline-row" id={`row-${year}`}>
-			<div
-				style={{
-					fontWeight: "bold",
-					marginBottom: "0.5rem",
-					color: "var(--text-primary)",
-					textAlign: "left",
-					paddingLeft: "0.5rem",
-				}}
-			>
+			<div className="timeline-row__year">
 				{year}
 			</div>
-			<div className="month-markers">
-				<span>Jan</span>
-				<span>Feb</span>
-				<span>Mar</span>
-				<span>Apr</span>
-				<span>May</span>
-				<span>Jun</span>
-				<span>Jul</span>
-				<span>Aug</span>
-				<span>Sep</span>
-				<span>Oct</span>
-				<span>Nov</span>
-				<span>Dec</span>
+			<div className="timeline-row__months">
+				<span className="timeline-row__month">Jan</span>
+				<span className="timeline-row__month">Feb</span>
+				<span className="timeline-row__month">Mar</span>
+				<span className="timeline-row__month">Apr</span>
+				<span className="timeline-row__month">May</span>
+				<span className="timeline-row__month">Jun</span>
+				<span className="timeline-row__month">Jul</span>
+				<span className="timeline-row__month">Aug</span>
+				<span className="timeline-row__month">Sep</span>
+				<span className="timeline-row__month">Oct</span>
+				<span className="timeline-row__month">Nov</span>
+				<span className="timeline-row__month">Dec</span>
 			</div>
-			<div className="track">
+			<div className="timeline-row__track">
 				{Array.from({ length: 52 }, (_, i) => (
 					<WeekCell key={i} year={year} weekNumber={i + 1} />
 				))}

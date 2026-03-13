@@ -1,0 +1,40 @@
+:root {
+	color-scheme: light;
+	--bg-color: #fafafa;
+	--theme-blue-1: #5679a6;
+	--theme-blue-2: #6394bf;
+	--theme-olive: #62733f;
+	--theme-gold-1: #d99b29;
+	--theme-gold-2: #a6771f;
+	--text-primary: var(--theme-blue-1);
+	--text-secondary: #64748b;
+	--accent-color: var(--theme-blue-1);
+	--accent-color-hover: var(--theme-blue-2);
+	--accent-glow: rgba(86, 121, 166, 0.28);
+	--border-color: #e2e8f0;
+	--track-bg: #f1f5f9;
+	--track-border: #e2e8f0;
+	--surface-bg: #ffffff;
+	--surface-hover: #edf3f9;
+	--surface-elevated: rgba(255, 255, 255, 0.85);
+	--handle-bg: #ffffff;
+	--panel-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+	color-scheme: dark;
+	--bg-color: #0f1620;
+	--text-primary: #edf4fb;
+	--text-secondary: #9fb2ca;
+	--accent-color: var(--theme-blue-2);
+	--accent-color-hover: #84b1d8;
+	--accent-glow: rgba(99, 148, 191, 0.34);
+	--border-color: rgba(99, 148, 191, 0.2);
+	--track-bg: #182331;
+	--track-border: rgba(99, 148, 191, 0.12);
+	--surface-bg: #15202d;
+	--surface-hover: #1c2a3b;
+	--surface-elevated: rgba(17, 25, 36, 0.88);
+	--handle-bg: #f5f8fc;
+	--panel-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
+}

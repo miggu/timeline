@@ -1,0 +1,41 @@
+@font-face {
+	font-family: "TWK Lausanne";
+	src: url("/fonts/twklausanne-50.woff2") format("woff2");
+	font-weight: 50;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "TWK Lausanne";
+	src: url("/fonts/twklausanne-150.woff2") format("woff2");
+	font-weight: 150;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "TWK Lausanne";
+	src: url("/fonts/twklausanne-300.woff2") format("woff2");
+	font-weight: 300;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "TWK Lausanne";
+	src: url("/fonts/twklausanne-500.woff2") format("woff2");
+	font-weight: 500;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "TWK Lausanne";
+	src: url("/fonts/twklausanne-700.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "TWK Lausanne";
+	src: url("/fonts/twklausanne-900.woff2") format("woff2");
+	font-weight: 900;
+	font-style: normal;
+}

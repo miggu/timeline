@@ -1,15 +1,16 @@
 import React from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { getEventPaletteColor, type ResizeEdge } from "../timeline";
+import type { ResizeEdge } from "../types";
+import { getEventPaletteColor } from "../timeline";
 
 // SVG Icons
 const ChevronLeft = () => (
-	<svg viewBox="0 0 24 24" className="icon">
+	<svg viewBox="0 0 24 24" className="timeline-event__icon">
 		<path d="M15 18l-6-6 6-6" />
 	</svg>
 );
 const ChevronRight = () => (
-	<svg viewBox="0 0 24 24" className="icon">
+	<svg viewBox="0 0 24 24" className="timeline-event__icon">
 		<path d="M9 18l6-6-6-6" />
 	</svg>
 );
@@ -41,10 +42,10 @@ type EventBlockStyle = React.CSSProperties & {
 
 const EventBlockChrome = () => (
 	<>
-		<div className="resize-handle left">
+		<div className="timeline-event__handle timeline-event__handle--start">
 			<ChevronLeft />
 		</div>
-		<div className="resize-handle right">
+		<div className="timeline-event__handle timeline-event__handle--end">
 			<ChevronRight />
 		</div>
 	</>
@@ -69,7 +70,7 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 			event.preventDefault();
 			event.stopPropagation();
 
-			const trackElement = event.currentTarget.closest(".track");
+			const trackElement = event.currentTarget.closest(".timeline-row__track");
 
 			if (!(trackElement instanceof HTMLElement)) {
 				return;
@@ -101,19 +102,19 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 	return (
 		<div
 			ref={setNodeRef}
-			className={`event-block${isResizeActive ? " is-resizing" : ""}`}
+			className={`timeline-event${isResizeActive ? " timeline-event--resizing" : ""}`}
 			style={style}
 			{...listeners}
 			{...attributes}
 		>
 			<div
-				className="resize-handle left"
+				className="timeline-event__handle timeline-event__handle--start"
 				onPointerDown={handleResizePointerDown("start")}
 			>
 				<ChevronLeft />
 			</div>
 			<div
-				className="resize-handle right"
+				className="timeline-event__handle timeline-event__handle--end"
 				onPointerDown={handleResizePointerDown("end")}
 			>
 				<ChevronRight />
@@ -136,7 +137,7 @@ export const EventBlockOverlay: React.FC<EventBlockOverlayProps> = ({
 	};
 
 	return (
-		<div className="event-block event-block-overlay" style={style}>
+		<div className="timeline-event timeline-event--overlay" style={style}>
 			<EventBlockChrome />
 		</div>
 	);

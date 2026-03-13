@@ -1,0 +1,67 @@
+.timeline-event {
+	position: absolute;
+	top: 10px;
+	height: 24px;
+	background-color: var(--event-color, var(--accent-color));
+	border-radius: 6px;
+	box-shadow: 0 8px 20px -4px var(--event-glow, var(--accent-glow));
+	cursor: grab;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 4px;
+	user-select: none;
+	touch-action: none;
+	will-change: transform;
+	transition:
+		box-shadow 0.2s ease,
+		transform 0.2s ease;
+	z-index: 10;
+}
+
+.timeline-event:hover {
+	box-shadow: 0 12px 24px -4px var(--event-glow, var(--accent-glow));
+	transform: translateY(-1px);
+}
+
+.timeline-event:active {
+	cursor: grabbing;
+}
+
+.timeline-event--resizing,
+.timeline-event--resizing:hover,
+.timeline-event--resizing:active {
+	cursor: ew-resize;
+	transform: none;
+}
+
+.timeline-event--overlay {
+	position: relative;
+	top: auto;
+	left: auto;
+	cursor: grabbing;
+	pointer-events: none;
+}
+
+.timeline-event__handle {
+	width: 16px;
+	height: 16px;
+	background-color: var(--handle-bg);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: ew-resize;
+	color: var(--event-color, var(--accent-color));
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-event__icon {
+	width: 12px;
+	height: 12px;
+	fill: none;
+	stroke: var(--event-color, var(--accent-color));
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}

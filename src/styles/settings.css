@@ -1,0 +1,115 @@
+.settings {
+	position: fixed;
+	top: 1.5rem;
+	right: 1.5rem;
+	background: var(--surface-elevated);
+	backdrop-filter: blur(12px);
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	padding: 1rem;
+	box-shadow: var(--panel-shadow);
+	z-index: 1000;
+	min-width: 200px;
+}
+
+.settings__header {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 500;
+	margin-bottom: 1rem;
+	color: var(--text-primary);
+	font-size: 0.9rem;
+}
+
+.settings__icon {
+	width: 1rem;
+	height: 1rem;
+	fill: none;
+	stroke: var(--text-secondary);
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.settings__group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.settings__toggle-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.settings__label {
+	font-size: 0.8rem;
+	color: var(--text-secondary);
+}
+
+.settings__select {
+	padding: 0.5rem;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	background: var(--surface-bg);
+	color: var(--text-primary);
+	font-family: inherit;
+	font-size: 0.85rem;
+	cursor: pointer;
+	outline: none;
+}
+
+.settings__select:focus {
+	border-color: var(--accent-color);
+}
+
+.theme-switch {
+	border: 0;
+	background: transparent;
+	padding: 0;
+	cursor: pointer;
+}
+
+.theme-switch__track {
+	width: 48px;
+	height: 28px;
+	border-radius: 999px;
+	background: var(--surface-bg);
+	border: 1px solid var(--border-color);
+	display: flex;
+	align-items: center;
+	padding: 3px;
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		box-shadow 0.2s ease;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.theme-switch__thumb {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: var(--accent-color);
+	transform: translateX(0);
+	transition:
+		transform 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.theme-switch--checked .theme-switch__track {
+	background: color-mix(in srgb, var(--accent-color) 18%, var(--surface-bg));
+	border-color: color-mix(in srgb, var(--accent-color) 30%, var(--border-color));
+}
+
+.theme-switch--checked .theme-switch__thumb {
+	transform: translateX(20px);
+}
+
+.theme-switch:focus-visible .theme-switch__track {
+	outline: 2px solid color-mix(in srgb, var(--accent-color) 55%, white);
+	outline-offset: 2px;
+}
