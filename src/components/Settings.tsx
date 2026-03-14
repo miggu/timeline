@@ -5,6 +5,7 @@ interface SettingsProps {
 	setYearsToDisplay: (years: number) => void;
 	isDarkMode: boolean;
 	setIsDarkMode: (isDarkMode: boolean) => void;
+	onExportTimeline: () => void;
 }
 
 export function Settings({
@@ -12,6 +13,7 @@ export function Settings({
 	setYearsToDisplay,
 	isDarkMode,
 	setIsDarkMode,
+	onExportTimeline,
 }: SettingsProps) {
 	return (
 		<div className="settings">
@@ -51,6 +53,17 @@ export function Settings({
 						onChange={setIsDarkMode}
 					/>
 				</div>
+			</div>
+
+			<div className="settings__group">
+				<span className="settings__label">Export</span>
+				<button
+					className="settings__button"
+					type="button"
+					onClick={onExportTimeline}
+				>
+					Download JSON
+				</button>
 			</div>
 		</div>
 	);

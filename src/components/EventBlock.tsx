@@ -9,7 +9,12 @@ import {
 } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { ResizeEdge } from "../types";
-import { getEventLaneTop, getEventPaletteColor } from "../timeline";
+import {
+	getEventLaneTop,
+	getEventLeftPercent,
+	getEventPaletteColor,
+	getEventWidthPercent,
+} from "../timeline";
 
 // SVG Icons
 const ChevronLeft = () => (
@@ -25,8 +30,9 @@ const ChevronRight = () => (
 
 interface EventBlockProps {
 	id: string;
-	leftPercent: number;
-	widthPercent: number;
+	year: number;
+	beginDay: number;
+	endDay: number;
 	colorIndex: number;
 	label: string;
 	lane: number;
@@ -60,8 +66,9 @@ type EventBlockStyle = CSSProperties & {
 
 export function EventBlock({
 	id,
-	leftPercent,
-	widthPercent,
+	year,
+	beginDay,
+	endDay,
 	colorIndex,
 	label,
 	lane,
@@ -175,9 +182,9 @@ export function EventBlock({
 	const paletteColor = getEventPaletteColor(colorIndex);
 
 	const style: EventBlockStyle = {
-		left: `${leftPercent}%`,
+		left: `${getEventLeftPercent(year, beginDay)}%`,
 		top: `${getEventLaneTop(lane)}px`,
-		width: `${widthPercent}%`,
+		width: `${getEventWidthPercent(year, beginDay, endDay)}%`,
 		transform: transform
 			? `translate3d(${transform.x}px, 0, 0)`
 			: undefined,

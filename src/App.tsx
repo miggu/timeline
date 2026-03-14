@@ -22,11 +22,18 @@ import {
 	setStoredThemeMode,
 	setStoredYearsToDisplay,
 } from "./local-storage";
-import type { ResizeEdge, ThemeMode, TimelineEvent } from "./types";
+import type {
+	ResizeEdge,
+	ThemeMode,
+	TimelineEvent,
+	TimelineExportData,
+} from "./types";
 import {
-	LOG_EVENT_WIDTH_PERCENT,
+	LOG_EVENT_DURATION_DAYS,
 	findAvailableLane,
 	findNextEventPlacement,
+	getDaysInYear,
+	getEventWidthPercent,
 	getEventLaneTop,
 	moveTimelineEventToWeek,
 	resizeTimelineEvent,
@@ -43,9 +50,10 @@ interface ActiveResizeState {
 	id: string;
 	edge: ResizeEdge;
 	startClientX: number;
-	startLeftPercent: number;
-	startWidthPercent: number;
+	startBeginDay: number;
+	startEndDay: number;
 	trackWidth: number;
+	year: number;
 }
 
 interface RecentlyDeletedEventState {
@@ -136,8 +144,8 @@ function App() {
 			findAvailableLane(
 				events,
 				dropTarget.year,
-				nextPosition.leftPercent,
-				activeEvent.widthPercent,
+				nextPosition.beginDay,
+				nextPosition.endDay,
 				activeEvent.id,
 			) ?? activeDrag?.lane ?? activeEvent.lane;
 
@@ -162,7 +170,12 @@ function App() {
 			event.active.rect.current.initial ?? event.active.rect.current.translated;
 		const measuredWidth =
 			timelineEvent && trackElement
-				? (trackElement.getBoundingClientRect().width * timelineEvent.widthPercent) /
+				? (trackElement.getBoundingClientRect().width *
+						getEventWidthPercent(
+							timelineEvent.year,
+							timelineEvent.beginDay,
+							timelineEvent.endDay,
+						)) /
 					100
 				: initialRect?.width ?? 48;
 		const measuredHeight =
@@ -247,9 +260,10 @@ function App() {
 			id,
 			edge,
 			startClientX: clientX,
-			startLeftPercent: eventToResize.leftPercent,
-			startWidthPercent: eventToResize.widthPercent,
+			startBeginDay: eventToResize.beginDay,
+			startEndDay: eventToResize.endDay,
 			trackWidth,
+			year: eventToResize.year,
 		});
 	};
 
@@ -329,9 +343,10 @@ function App() {
 		}
 
 		const handlePointerMove = (event: PointerEvent) => {
-			const deltaPercent =
+			const deltaDays = Math.round(
 				((event.clientX - activeResize.startClientX) / activeResize.trackWidth) *
-				100;
+					getDaysInYear(activeResize.year),
+			);
 
 			setEvents((prev) =>
 				prev.map((timelineEvent) =>
@@ -339,11 +354,11 @@ function App() {
 						? resizeTimelineEvent(
 								{
 									...timelineEvent,
-									leftPercent: activeResize.startLeftPercent,
-									widthPercent: activeResize.startWidthPercent,
+									beginDay: activeResize.startBeginDay,
+									endDay: activeResize.startEndDay,
 								},
 								activeResize.edge,
-								deltaPercent,
+								deltaDays,
 							)
 						: timelineEvent,
 					),
@@ -397,8 +412,8 @@ function App() {
 					const nextLane = findAvailableLane(
 						prev,
 						dropTarget.year,
-						nextPosition.leftPercent,
-						draggedEvent.widthPercent,
+						nextPosition.beginDay,
+						nextPosition.endDay,
 						draggedEvent.id,
 					);
 
@@ -429,7 +444,7 @@ function App() {
 			const placement = findNextEventPlacement(
 				prev,
 				candidateYears,
-				LOG_EVENT_WIDTH_PERCENT,
+				LOG_EVENT_DURATION_DAYS,
 			);
 
 			if (!placement) {
@@ -441,14 +456,46 @@ function App() {
 				{
 					id: `e${prev.length + 1}`,
 					year: placement.year,
-					leftPercent: placement.leftPercent,
-					widthPercent: LOG_EVENT_WIDTH_PERCENT,
+					beginDay: placement.beginDay,
+					endDay: placement.endDay,
 					colorIndex: prev.length,
 					label: "",
 					lane: placement.lane,
 				},
 			];
 		});
+	};
+
+	const handleExportTimeline = () => {
+		const exportPayload: TimelineExportData = {
+			version: 1,
+			exportedAt: new Date().toISOString(),
+			currentYear,
+			yearsToDisplay,
+			themeMode,
+			events: [...events].sort(
+				(left, right) =>
+					left.year - right.year ||
+					left.lane - right.lane ||
+					left.beginDay - right.beginDay ||
+					left.endDay - right.endDay ||
+					left.id.localeCompare(right.id),
+			),
+		};
+		const exportBlob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+			type: "application/json",
+		});
+		const downloadUrl = window.URL.createObjectURL(exportBlob);
+		const link = document.createElement("a");
+
+		link.href = downloadUrl;
+		link.download = `timeline-export-${new Date().toISOString().slice(0, 10)}.json`;
+		document.body.append(link);
+		link.click();
+		link.remove();
+		window.setTimeout(() => {
+			window.URL.revokeObjectURL(downloadUrl);
+		}, 0);
 	};
 
 	const handleUndoDelete = () => {
@@ -481,6 +528,7 @@ function App() {
 				setIsDarkMode={(isDarkMode) =>
 					setThemeMode(isDarkMode ? "dark" : "light")
 				}
+				onExportTimeline={handleExportTimeline}
 			/>
 			<h1 className="timeline__title">THIS IS YOUR LIFE.</h1>
 

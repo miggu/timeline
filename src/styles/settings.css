@@ -38,6 +38,10 @@
 	gap: 0.4rem;
 }
 
+.settings__group + .settings__group {
+	margin-top: 0.85rem;
+}
+
 .settings__toggle-row {
 	display: flex;
 	align-items: center;
@@ -64,6 +68,34 @@
 
 .settings__select:focus {
 	border-color: var(--accent-color);
+}
+
+.settings__button {
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	background: var(--surface-bg);
+	color: var(--text-primary);
+	font-family: inherit;
+	font-size: 0.82rem;
+	font-weight: 600;
+	line-height: 1;
+	padding: 0.7rem 0.85rem;
+	cursor: pointer;
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease,
+		transform 0.2s ease;
+}
+
+.settings__button:hover,
+.settings__button:focus-visible {
+	background: var(--surface-hover);
+	border-color: var(--accent-color);
+	outline: none;
+}
+
+.settings__button:active {
+	transform: translateY(1px);
 }
 
 .theme-switch {

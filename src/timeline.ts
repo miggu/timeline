@@ -1,13 +1,12 @@
 import type { ResizeEdge, TimelineEvent } from "./types";
 
 export const WEEK_COUNT = 52;
-export const WEEK_PERCENT = 100 / WEEK_COUNT;
-export const MIN_EVENT_WIDTH_PERCENT = WEEK_PERCENT;
 export const MAX_EVENT_LANES = 3;
 export const EVENT_BLOCK_TOP = 10;
 export const EVENT_BLOCK_HEIGHT = 24;
 export const EVENT_LANE_GAP = 8;
-export const LOG_EVENT_WIDTH_PERCENT = Number((WEEK_PERCENT * 7).toFixed(6));
+export const MIN_EVENT_DURATION_DAYS = 7;
+export const LOG_EVENT_DURATION_DAYS = 49;
 
 export const EVENT_COLOR_PALETTE = [
 	{ color: "#5679A6", glow: "rgba(86, 121, 166, 0.28)" },
@@ -22,17 +21,67 @@ const clamp = (value: number, min: number, max: number) =>
 
 const roundPercent = (value: number) => Number(value.toFixed(6));
 const doIntervalsOverlap = (
-	leftA: number,
-	widthA: number,
-	leftB: number,
-	widthB: number,
-) => leftA < leftB + widthB && leftB < leftA + widthA;
+	beginA: number,
+	endA: number,
+	beginB: number,
+	endB: number,
+) => beginA <= endB && beginB <= endA;
 
-const snapPercentToWeek = (value: number) =>
-	roundPercent(Math.round(value / WEEK_PERCENT) * WEEK_PERCENT);
+export const getDaysInYear = (year: number) =>
+	new Date(year, 1, 29).getMonth() === 1 ? 366 : 365;
 
-export const getLeftPercentForWeek = (weekNumber: number) =>
-	roundPercent(clamp((weekNumber - 1) * WEEK_PERCENT, 0, 100 - WEEK_PERCENT));
+export const getDayForWeek = (year: number, weekNumber: number) => {
+	const dayCount = getDaysInYear(year);
+
+	return clamp(
+		Math.round(((clamp(weekNumber, 1, WEEK_COUNT) - 1) / WEEK_COUNT) * dayCount) +
+			1,
+		1,
+		dayCount,
+	);
+};
+
+const snapDayToWeek = (year: number, day: number) => {
+	const dayCount = getDaysInYear(year);
+	const weekNumber =
+		Math.round(((clamp(day, 1, dayCount) - 1) / dayCount) * WEEK_COUNT) + 1;
+
+	return getDayForWeek(year, weekNumber);
+};
+
+export const getEventDurationDays = (event: TimelineEvent) =>
+	event.endDay - event.beginDay + 1;
+
+export const getEventLeftPercent = (year: number, beginDay: number) =>
+	roundPercent(((clamp(beginDay, 1, getDaysInYear(year)) - 1) / getDaysInYear(year)) * 100);
+
+export const getEventWidthPercent = (
+	year: number,
+	beginDay: number,
+	endDay: number,
+) =>
+	roundPercent(
+		((clamp(endDay, beginDay, getDaysInYear(year)) -
+			clamp(beginDay, 1, getDaysInYear(year)) +
+			1) /
+			getDaysInYear(year)) *
+			100,
+	);
+
+const clampEventRange = (
+	year: number,
+	beginDay: number,
+	durationDays: number,
+) => {
+	const dayCount = getDaysInYear(year);
+	const safeDuration = clamp(durationDays, MIN_EVENT_DURATION_DAYS, dayCount);
+	const safeBeginDay = clamp(beginDay, 1, dayCount - safeDuration + 1);
+
+	return {
+		beginDay: safeBeginDay,
+		endDay: safeBeginDay + safeDuration - 1,
+	};
+};
 
 export const getEventLaneTop = (lane: number) =>
 	EVENT_BLOCK_TOP + lane * (EVENT_BLOCK_HEIGHT + EVENT_LANE_GAP);
@@ -49,16 +98,17 @@ export const moveTimelineEventToWeek = (
 	weekNumber: number,
 	lane: number,
 ): TimelineEvent => {
-	const nextLeftPercent = clamp(
-		snapPercentToWeek(getLeftPercentForWeek(weekNumber)),
-		0,
-		100 - event.widthPercent,
+	const nextRange = clampEventRange(
+		year,
+		snapDayToWeek(year, getDayForWeek(year, weekNumber)),
+		getEventDurationDays(event),
 	);
 
 	return {
 		...event,
 		year,
-		leftPercent: roundPercent(nextLeftPercent),
+		beginDay: nextRange.beginDay,
+		endDay: nextRange.endDay,
 		lane,
 	};
 };
@@ -66,63 +116,65 @@ export const moveTimelineEventToWeek = (
 export const resizeTimelineEvent = (
 	event: TimelineEvent,
 	edge: ResizeEdge,
-	deltaPercent: number,
+	deltaDays: number,
 ): TimelineEvent => {
 	if (edge === "start") {
-		const rightPercent = event.leftPercent + event.widthPercent;
-		const nextLeftPercent = clamp(
-			snapPercentToWeek(event.leftPercent + deltaPercent),
-			0,
-			rightPercent - MIN_EVENT_WIDTH_PERCENT,
+		const nextBeginDay = clamp(
+			snapDayToWeek(event.year, event.beginDay + deltaDays),
+			1,
+			event.endDay - MIN_EVENT_DURATION_DAYS + 1,
 		);
 
 		return {
 			...event,
-			leftPercent: roundPercent(nextLeftPercent),
-			widthPercent: roundPercent(rightPercent - nextLeftPercent),
+			beginDay: nextBeginDay,
 		};
 	}
 
-	const nextWidthPercent = clamp(
-		snapPercentToWeek(event.widthPercent + deltaPercent),
-		MIN_EVENT_WIDTH_PERCENT,
-		100 - event.leftPercent,
+	const nextEndDay = clamp(
+		snapDayToWeek(event.year, event.endDay + deltaDays),
+		event.beginDay + MIN_EVENT_DURATION_DAYS - 1,
+		getDaysInYear(event.year),
 	);
 
 	return {
 		...event,
-		widthPercent: roundPercent(nextWidthPercent),
+		endDay: nextEndDay,
 	};
 };
 
 export const findNextEventPlacement = (
 	events: TimelineEvent[],
 	candidateYears: number[],
-	widthPercent: number,
+	durationDays: number,
 ) => {
 	for (const year of candidateYears) {
+		const dayCount = getDaysInYear(year);
+
 		for (let lane = 0; lane < MAX_EVENT_LANES; lane += 1) {
 			const rowEvents = events
 				.filter((event) => event.year === year && event.lane === lane)
-				.sort((left, right) => left.leftPercent - right.leftPercent);
-			let cursor = 0;
+				.sort((left, right) => left.beginDay - right.beginDay);
+			let cursor = 1;
 
 			for (const event of rowEvents) {
-				if (event.leftPercent - cursor >= widthPercent) {
+				if (event.beginDay - cursor >= durationDays) {
 					return {
 						year,
-						leftPercent: roundPercent(cursor),
+						beginDay: cursor,
+						endDay: cursor + durationDays - 1,
 						lane,
 					};
 				}
 
-				cursor = Math.max(cursor, event.leftPercent + event.widthPercent);
+				cursor = Math.max(cursor, event.endDay + 1);
 			}
 
-			if (100 - cursor >= widthPercent) {
+			if (dayCount - cursor + 1 >= durationDays) {
 				return {
 					year,
-					leftPercent: roundPercent(cursor),
+					beginDay: cursor,
+					endDay: cursor + durationDays - 1,
 					lane,
 				};
 			}
@@ -135,8 +187,8 @@ export const findNextEventPlacement = (
 export const findAvailableLane = (
 	events: TimelineEvent[],
 	year: number,
-	leftPercent: number,
-	widthPercent: number,
+	beginDay: number,
+	endDay: number,
 	excludedId?: string,
 ) => {
 	const overlappingEvents = events.filter(
@@ -144,10 +196,10 @@ export const findAvailableLane = (
 			event.id !== excludedId &&
 			event.year === year &&
 			doIntervalsOverlap(
-				event.leftPercent,
-				event.widthPercent,
-				leftPercent,
-				widthPercent,
+				event.beginDay,
+				event.endDay,
+				beginDay,
+				endDay,
 			),
 	);
 
@@ -168,10 +220,10 @@ export const findAvailableLane = (
 			event.year === year &&
 			event.lane === nextLane &&
 			doIntervalsOverlap(
-				event.leftPercent,
-				event.widthPercent,
-				leftPercent,
-				widthPercent,
+				event.beginDay,
+				event.endDay,
+				beginDay,
+				endDay,
 			),
 	);
 

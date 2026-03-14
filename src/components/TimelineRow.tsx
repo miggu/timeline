@@ -56,7 +56,7 @@ export function TimelineRow({
 }: TimelineRowProps) {
 	const sortedEvents = [...events].sort(
 		(left, right) =>
-			left.lane - right.lane || left.leftPercent - right.leftPercent,
+			left.lane - right.lane || left.beginDay - right.beginDay,
 	);
 
 	return (
