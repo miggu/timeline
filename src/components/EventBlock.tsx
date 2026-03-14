@@ -209,12 +209,6 @@ export function EventBlock({
 		onDelete(id);
 	};
 
-	const handleHandleClick = (event: MouseEvent<HTMLDivElement>) => {
-		event.preventDefault();
-		event.stopPropagation();
-		suppressNextEditRef.current = false;
-	};
-
 	const paletteColor = getEventPaletteColor(colorIndex);
 
 	const style: EventBlockStyle = {
@@ -260,9 +254,24 @@ export function EventBlock({
 				</div>
 			) : null}
 			<div
-				className="timeline-event__handle timeline-event__handle--start"
-				onClick={handleHandleClick}
+				className="timeline-event__resize-hit timeline-event__resize-hit--start"
+				onClick={(event) => {
+					event.preventDefault();
+					event.stopPropagation();
+				}}
 				onPointerDown={handleResizePointerDown("start")}
+			/>
+			<div
+				className="timeline-event__resize-hit timeline-event__resize-hit--end"
+				onClick={(event) => {
+					event.preventDefault();
+					event.stopPropagation();
+				}}
+				onPointerDown={handleResizePointerDown("end")}
+			/>
+			<div
+				className="timeline-event__handle timeline-event__handle--start"
+				aria-hidden="true"
 			>
 				<ChevronLeft />
 			</div>
@@ -287,8 +296,7 @@ export function EventBlock({
 			</div>
 			<div
 				className="timeline-event__handle timeline-event__handle--end"
-				onClick={handleHandleClick}
-				onPointerDown={handleResizePointerDown("end")}
+				aria-hidden="true"
 			>
 				<ChevronRight />
 			</div>

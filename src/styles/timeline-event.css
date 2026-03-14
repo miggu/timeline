@@ -79,6 +79,26 @@
 	cursor: ew-resize;
 	color: var(--event-color, var(--accent-color));
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	pointer-events: none;
+}
+
+.timeline-event__resize-hit {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: clamp(4px, 22%, 6px);
+	background: transparent;
+	cursor: ew-resize;
+	touch-action: none;
+	z-index: 1;
+}
+
+.timeline-event__resize-hit--start {
+	left: 0;
+}
+
+.timeline-event__resize-hit--end {
+	right: 0;
 }
 
 .timeline-event__toolbar {
