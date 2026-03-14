@@ -18,12 +18,6 @@
 	z-index: 10;
 }
 
-.timeline-event--selected {
-	box-shadow:
-		0 0 0 2px rgba(248, 250, 252, 0.9),
-		0 12px 28px -6px var(--event-glow, var(--accent-glow));
-}
-
 .timeline-event--editing,
 .timeline-event--editing:hover,
 .timeline-event--editing:active {

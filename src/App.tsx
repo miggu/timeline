@@ -1,4 +1,4 @@
-import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useState } from "react";
 import {
 	DndContext,
 	DragOverlay,
@@ -60,6 +60,9 @@ interface RecentlyDeletedEventState {
 	event: TimelineEvent;
 }
 
+const DRAG_ACTIVATION_DISTANCE = 8;
+const DRAG_CLICK_SUPPRESSION_MS = 120;
+
 const getDropTarget = (id: string) => {
 	const match = id.match(/week-(\d+)-(\d+)/);
 
@@ -72,15 +75,6 @@ const getDropTarget = (id: string) => {
 		weekNumber: Number.parseInt(match[2], 10),
 	};
 };
-
-const isEditableTarget = (target: EventTarget | null) =>
-	target instanceof HTMLElement &&
-		(target.isContentEditable ||
-			target instanceof HTMLInputElement ||
-			target instanceof HTMLTextAreaElement ||
-			target instanceof HTMLSelectElement ||
-			target instanceof HTMLButtonElement ||
-			target instanceof HTMLAnchorElement);
 
 function App() {
 	const currentYear = 2026;
@@ -101,13 +95,15 @@ function App() {
 		null,
 	);
 	const [editingEventId, setEditingEventId] = useState<string | null>(null);
-	const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+	const [suppressedEditEventId, setSuppressedEditEventId] = useState<string | null>(
+		null,
+	);
 	const [recentlyDeletedEvent, setRecentlyDeletedEvent] =
 		useState<RecentlyDeletedEventState | null>(null);
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
-				distance: 6,
+				distance: DRAG_ACTIVATION_DISTANCE,
 			},
 		}),
 		useSensor(KeyboardSensor),
@@ -187,8 +183,14 @@ function App() {
 			height: measuredHeight,
 			lane: timelineEvent?.lane ?? 0,
 		});
-		setSelectedEventId(null);
+		setSuppressedEditEventId(activeId);
 		setEditingEventId(null);
+	};
+
+	const releaseSuppressedEdit = (id: string) => {
+		window.setTimeout(() => {
+			setSuppressedEditEventId((currentId) => (currentId === id ? null : currentId));
+		}, DRAG_CLICK_SUPPRESSION_MS);
 	};
 
 	const clearActiveDrag = () => {
@@ -202,12 +204,10 @@ function App() {
 	const handleStartEditing = (id: string) => {
 		clearActiveDrag();
 		clearActiveResize();
-		setSelectedEventId(id);
 		setEditingEventId(id);
 	};
 
 	const handleCancelEditing = (id: string) => {
-		setSelectedEventId((selectedId) => (selectedId === id ? null : selectedId));
 		setEditingEventId((editingId) => (editingId === id ? null : editingId));
 	};
 
@@ -215,14 +215,7 @@ function App() {
 		setEvents((prev) =>
 			prev.map((event) => (event.id === id ? { ...event, label } : event)),
 		);
-		setSelectedEventId((selectedId) => (selectedId === id ? null : selectedId));
 		setEditingEventId((editingId) => (editingId === id ? null : editingId));
-	};
-
-	const handleSelectEvent = (id: string) => {
-		clearActiveDrag();
-		clearActiveResize();
-		setSelectedEventId(id);
 	};
 
 	const handleDeleteEvent = (id: string) => {
@@ -235,7 +228,6 @@ function App() {
 
 		setRecentlyDeletedEvent({ event: eventToDelete });
 		setEvents((prev) => prev.filter((timelineEvent) => timelineEvent.id !== id));
-		setSelectedEventId((currentId) => (currentId === id ? null : currentId));
 		setEditingEventId((currentId) => (currentId === id ? null : currentId));
 		clearActiveDrag();
 		clearActiveResize();
@@ -255,7 +247,6 @@ function App() {
 
 		clearActiveDrag();
 		setEditingEventId(null);
-		setSelectedEventId(id);
 		setActiveResize({
 			id,
 			edge,
@@ -294,48 +285,6 @@ function App() {
 			window.clearTimeout(timeoutId);
 		};
 	}, [recentlyDeletedEvent]);
-
-	useEffect(() => {
-		if (!selectedEventId || editingEventId || activeResize) {
-			return;
-		}
-
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (isEditableTarget(event.target)) {
-				return;
-			}
-
-			if (event.key === "Escape") {
-				setSelectedEventId(null);
-				return;
-			}
-
-			if (event.key === "Enter" || event.key === "F2") {
-				event.preventDefault();
-				handleStartEditing(selectedEventId);
-				return;
-			}
-
-			if (event.key !== "Delete" && event.key !== "Backspace") {
-				return;
-			}
-
-			event.preventDefault();
-			handleDeleteEvent(selectedEventId);
-		};
-
-		window.addEventListener("keydown", handleKeyDown);
-
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-		};
-	}, [
-		activeResize,
-		editingEventId,
-		handleDeleteEvent,
-		handleStartEditing,
-		selectedEventId,
-	]);
 
 	useEffect(() => {
 		if (!activeResize) {
@@ -389,6 +338,7 @@ function App() {
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
+		const activeId = String(active.id);
 
 		if (over && over.id) {
 			const dropTarget = getDropTarget(String(over.id));
@@ -436,6 +386,7 @@ function App() {
 		}
 
 		clearActiveDrag();
+		releaseSuppressedEdit(activeId);
 	};
 
 	const handleLogEvent = () => {
@@ -504,23 +455,11 @@ function App() {
 		}
 
 		setEvents((prev) => [...prev, recentlyDeletedEvent.event]);
-		setSelectedEventId(recentlyDeletedEvent.event.id);
 		setRecentlyDeletedEvent(null);
 	};
 
-	const handleTimelinePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-		if (
-			event.target instanceof Element &&
-			event.target.closest(".timeline-event")
-		) {
-			return;
-		}
-
-		setSelectedEventId(null);
-	};
-
 	return (
-		<div className="timeline" onPointerDown={handleTimelinePointerDown}>
+		<div className="timeline">
 			<Settings
 				yearsToDisplay={yearsToDisplay}
 				setYearsToDisplay={setYearsToDisplay}
@@ -542,7 +481,12 @@ function App() {
 				collisionDetection={pointerWithin}
 				onDragStart={handleDragStart}
 				onDragEnd={handleDragEnd}
-				onDragCancel={clearActiveDrag}
+				onDragCancel={() => {
+					if (activeDrag) {
+						releaseSuppressedEdit(activeDrag.id);
+					}
+					clearActiveDrag();
+				}}
 				sensors={sensors}
 			>
 				<div className="timeline__rows">
@@ -553,12 +497,11 @@ function App() {
 							events={events.filter((e) => e.year === year)}
 							activeResizeId={activeResize?.id ?? null}
 							editingEventId={editingEventId}
-							selectedEventId={selectedEventId}
+							suppressedEditEventId={suppressedEditEventId}
 							onCancelEditing={handleCancelEditing}
 							onCommitLabel={handleCommitLabel}
 							onDeleteEvent={handleDeleteEvent}
 							onResizeStart={handleResizeStart}
-							onSelectEvent={handleSelectEvent}
 							onStartEditing={handleStartEditing}
 						/>
 					))}

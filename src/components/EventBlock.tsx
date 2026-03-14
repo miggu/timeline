@@ -38,7 +38,7 @@ interface EventBlockProps {
 	lane: number;
 	isEditing: boolean;
 	isResizeActive: boolean;
-	isSelected: boolean;
+	suppressEdit: boolean;
 	onCancelEditing: (id: string) => void;
 	onCommitLabel: (id: string, label: string) => void;
 	onDelete: (id: string) => void;
@@ -48,7 +48,6 @@ interface EventBlockProps {
 		clientX: number,
 		trackWidth: number,
 	) => void;
-	onSelect: (id: string) => void;
 	onStartEditing: (id: string) => void;
 }
 
@@ -74,16 +73,16 @@ export function EventBlock({
 	lane,
 	isEditing,
 	isResizeActive,
-	isSelected,
+	suppressEdit,
 	onCancelEditing,
 	onCommitLabel,
 	onDelete,
 	onResizeStart,
-	onSelect,
 	onStartEditing,
 }: EventBlockProps) {
 	const inputRef = useRef<HTMLInputElement | null>(null);
 	const skipBlurCommitRef = useRef(false);
+	const suppressNextEditRef = useRef(false);
 	const [draftLabel, setDraftLabel] = useState(label);
 	const { attributes, listeners, setNodeRef, transform, isDragging } =
 		useDraggable({
@@ -108,6 +107,7 @@ export function EventBlock({
 		(edge: ResizeEdge) => (event: PointerEvent<HTMLDivElement>) => {
 			event.preventDefault();
 			event.stopPropagation();
+			suppressNextEditRef.current = true;
 
 			const trackElement = event.currentTarget.closest(".timeline-row__track");
 
@@ -124,22 +124,12 @@ export function EventBlock({
 		};
 
 	const handleClick = (event: MouseEvent<HTMLDivElement>) => {
-		if (isDragging || isEditing || isResizeActive) {
+		if (isDragging || isEditing || isResizeActive || suppressEdit) {
 			return;
 		}
 
-		if (
-			event.target instanceof Element &&
-			event.target.closest(".timeline-event__handle")
-		) {
-			return;
-		}
-
-		onSelect(id);
-	};
-
-	const handleDoubleClick = (event: MouseEvent<HTMLDivElement>) => {
-		if (isDragging || isEditing || isResizeActive) {
+		if (suppressNextEditRef.current) {
+			suppressNextEditRef.current = false;
 			return;
 		}
 
@@ -151,6 +141,17 @@ export function EventBlock({
 		}
 
 		onStartEditing(id);
+	};
+
+	const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+		if (isEditing || isResizeActive) {
+			return;
+		}
+
+		if (event.key === "Enter" || event.key === " " || event.key === "F2") {
+			event.preventDefault();
+			onStartEditing(id);
+		}
 	};
 
 	const commitLabel = () => {
@@ -179,6 +180,30 @@ export function EventBlock({
 		onCancelEditing(id);
 	};
 
+	const handleDeletePointerDown = (
+		event: PointerEvent<HTMLButtonElement>,
+	) => {
+		event.preventDefault();
+		event.stopPropagation();
+		onDelete(id);
+		};
+
+	const handleDeleteKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+		if (event.key !== "Enter" && event.key !== " ") {
+			return;
+		}
+
+		event.preventDefault();
+		event.stopPropagation();
+		onDelete(id);
+	};
+
+	const handleHandleClick = (event: MouseEvent<HTMLDivElement>) => {
+		event.preventDefault();
+		event.stopPropagation();
+		suppressNextEditRef.current = false;
+	};
+
 	const paletteColor = getEventPaletteColor(colorIndex);
 
 	const style: EventBlockStyle = {
@@ -202,34 +227,24 @@ export function EventBlock({
 			{...attributes}
 			className={`timeline-event${
 				isEditing ? " timeline-event--editing" : ""
-			}${isResizeActive ? " timeline-event--resizing" : ""}${
-				isSelected ? " timeline-event--selected" : ""
-			}`}
+			}${isResizeActive ? " timeline-event--resizing" : ""}`}
 			style={style}
 			role="button"
 			tabIndex={isEditing ? -1 : 0}
-			aria-pressed={isSelected}
 			onClick={handleClick}
-			onDoubleClick={handleDoubleClick}
-			onFocus={() => onSelect(id)}
+			onKeyDown={handleKeyDown}
 		>
-			{isSelected && !isEditing && !isResizeActive ? (
+			{isEditing && !isResizeActive ? (
 				<div
 					className="timeline-event__toolbar"
 					onClick={(event) => event.stopPropagation()}
 					onPointerDown={(event) => event.stopPropagation()}
 				>
 					<button
-						className="timeline-event__toolbar-button"
-						type="button"
-						onClick={() => onStartEditing(id)}
-					>
-						Edit
-					</button>
-					<button
 						className="timeline-event__toolbar-button timeline-event__toolbar-button--danger"
 						type="button"
-						onClick={() => onDelete(id)}
+						onPointerDown={handleDeletePointerDown}
+						onKeyDown={handleDeleteKeyDown}
 					>
 						Delete
 					</button>
@@ -237,6 +252,7 @@ export function EventBlock({
 			) : null}
 			<div
 				className="timeline-event__handle timeline-event__handle--start"
+				onClick={handleHandleClick}
 				onPointerDown={handleResizePointerDown("start")}
 			>
 				<ChevronLeft />
@@ -262,6 +278,7 @@ export function EventBlock({
 			</div>
 			<div
 				className="timeline-event__handle timeline-event__handle--end"
+				onClick={handleHandleClick}
 				onPointerDown={handleResizePointerDown("end")}
 			>
 				<ChevronRight />
