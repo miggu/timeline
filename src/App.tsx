@@ -587,10 +587,7 @@ function App() {
 
   const handleExportTimeline = () => {
     const exportPayload: TimelineExportData = {
-      version: 1,
       exportedAt: new Date().toISOString(),
-      yearsToDisplay: years.length,
-      themeMode,
       events: [...events].sort(
         (left, right) =>
           left.year - right.year ||

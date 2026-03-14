@@ -12,9 +12,6 @@ export type ResizeEdge = "start" | "end";
 export type ThemeMode = "light" | "dark";
 
 export interface TimelineExportData {
-	version: number;
 	exportedAt: string;
-	yearsToDisplay: number;
-	themeMode: ThemeMode;
 	events: TimelineEvent[];
 }

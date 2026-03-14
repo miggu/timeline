@@ -132,6 +132,17 @@ const normalizeTimelineEvent = (event: StoredTimelineEvent): TimelineEvent => {
 	};
 };
 
+const getOldestEventYear = (events: TimelineEvent[]) => {
+	if (events.length === 0) {
+		return null;
+	}
+
+	return events.reduce(
+		(oldestYear, event) => Math.min(oldestYear, event.year),
+		events[0].year,
+	);
+};
+
 export const getStoredThemeMode = (): ThemeMode => {
 	if (typeof window === "undefined") {
 		return "light";
@@ -143,9 +154,7 @@ export const getStoredThemeMode = (): ThemeMode => {
 		return storedTheme;
 	}
 
-	return window.matchMedia("(prefers-color-scheme: dark)").matches
-		? "dark"
-		: "light";
+	return "light";
 };
 
 export const setStoredThemeMode = (themeMode: ThemeMode) => {
@@ -160,13 +169,20 @@ export const getStoredOldestYear = (
 	defaultOldestYear: number,
 	currentYear: number,
 ) => {
+	const oldestEventYear = getOldestEventYear(getStoredEvents());
 	const storedValue = readStoredJson(OLDEST_YEAR_STORAGE_KEY);
 
 	if (typeof storedValue !== "number" || !Number.isFinite(storedValue)) {
-		return defaultOldestYear;
+		return oldestEventYear === null
+			? defaultOldestYear
+			: Math.min(defaultOldestYear, oldestEventYear);
 	}
 
-	return clamp(Math.round(storedValue), 1, currentYear);
+	const storedOldestYear = clamp(Math.round(storedValue), 1, currentYear);
+
+	return oldestEventYear === null
+		? storedOldestYear
+		: Math.min(storedOldestYear, oldestEventYear);
 };
 
 export const setStoredOldestYear = (oldestYear: number) => {
