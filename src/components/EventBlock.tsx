@@ -63,6 +63,17 @@ type EventBlockStyle = CSSProperties & {
 	"--event-glow"?: string;
 };
 
+const getEventBlockPositionStyle = (
+	year: number,
+	beginDay: number,
+	endDay: number,
+	lane: number,
+): EventBlockStyle => ({
+	left: `${getEventLeftPercent(year, beginDay)}%`,
+	top: `${getEventLaneTop(lane)}px`,
+	width: `${getEventWidthPercent(year, beginDay, endDay)}%`,
+});
+
 export function EventBlock({
 	id,
 	year,
@@ -186,7 +197,7 @@ export function EventBlock({
 		event.preventDefault();
 		event.stopPropagation();
 		onDelete(id);
-		};
+	};
 
 	const handleDeleteKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
 		if (event.key !== "Enter" && event.key !== " ") {
@@ -207,9 +218,7 @@ export function EventBlock({
 	const paletteColor = getEventPaletteColor(colorIndex);
 
 	const style: EventBlockStyle = {
-		left: `${getEventLeftPercent(year, beginDay)}%`,
-		top: `${getEventLaneTop(lane)}px`,
-		width: `${getEventWidthPercent(year, beginDay, endDay)}%`,
+		...getEventBlockPositionStyle(year, beginDay, endDay, lane),
 		transform: transform
 			? `translate3d(${transform.x}px, 0, 0)`
 			: undefined,
@@ -282,6 +291,43 @@ export function EventBlock({
 				onPointerDown={handleResizePointerDown("end")}
 			>
 				<ChevronRight />
+			</div>
+		</div>
+	);
+}
+
+interface EventBlockPreviewProps {
+	year: number;
+	beginDay: number;
+	endDay: number;
+	colorIndex: number;
+	label: string;
+	lane: number;
+}
+
+export function EventBlockPreview({
+	year,
+	beginDay,
+	endDay,
+	colorIndex,
+	label,
+	lane,
+}: EventBlockPreviewProps) {
+	const paletteColor = getEventPaletteColor(colorIndex);
+	const style: EventBlockStyle = {
+		...getEventBlockPositionStyle(year, beginDay, endDay, lane),
+		"--event-color": paletteColor.color,
+		"--event-glow": paletteColor.glow,
+	};
+
+	return (
+		<div className="timeline-event timeline-event--preview" style={style} aria-hidden="true">
+			<div className="timeline-event__content">
+				{label ? (
+					<span className="timeline-event__label">{label}</span>
+				) : (
+					<span className="timeline-event__placeholder">Add text</span>
+				)}
 			</div>
 		</div>
 	);

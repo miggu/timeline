@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
-import { EventBlock } from "./EventBlock";
+import { EventBlock, EventBlockPreview } from "./EventBlock";
 import type { ResizeEdge, TimelineEvent } from "../types";
 import { getMonthStartPercent } from "../timeline";
 
@@ -41,6 +41,7 @@ function WeekCell({
 interface TimelineRowProps {
 	year: number;
 	events?: TimelineEvent[];
+	previewEvent: TimelineEvent | null;
 	activeResizeId: string | null;
 	editingEventId: string | null;
 	suppressedEditEventId: string | null;
@@ -59,6 +60,7 @@ interface TimelineRowProps {
 export function TimelineRow({
 	year,
 	events = [],
+	previewEvent,
 	activeResizeId,
 	editingEventId,
 	suppressedEditEventId,
@@ -95,6 +97,17 @@ export function TimelineRow({
 				{Array.from({ length: 52 }, (_, i) => (
 					<WeekCell key={i} year={year} weekNumber={i + 1} />
 				))}
+				{previewEvent ? (
+					<EventBlockPreview
+						key={`preview-${previewEvent.id}`}
+						year={previewEvent.year}
+						beginDay={previewEvent.beginDay}
+						endDay={previewEvent.endDay}
+						colorIndex={previewEvent.colorIndex}
+						label={previewEvent.label}
+						lane={previewEvent.lane}
+					/>
+				) : null}
 
 				{sortedEvents.map((event) => (
 					<EventBlock

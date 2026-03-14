@@ -39,7 +39,14 @@ export const DEFAULT_EVENTS: TimelineEvent[] = [
 	},
 ];
 
-type StoredTimelineEvent = Partial<TimelineEvent> & {
+type StoredTimelineEvent = {
+	id: string;
+	year: number;
+	colorIndex: number;
+	label?: string;
+	lane?: number;
+	beginDay?: number;
+	endDay?: number;
 	leftPercent?: number;
 	widthPercent?: number;
 };

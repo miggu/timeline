@@ -49,6 +49,25 @@
 	pointer-events: none;
 }
 
+.timeline-event--preview {
+	cursor: default;
+	pointer-events: none;
+	opacity: 0.42;
+	box-shadow: none;
+	outline: 1px dashed color-mix(
+		in srgb,
+		var(--event-color, var(--accent-color)) 70%,
+		transparent
+	);
+	outline-offset: 1px;
+}
+
+.timeline-event--preview:hover,
+.timeline-event--preview:active {
+	transform: none;
+	box-shadow: none;
+}
+
 .timeline-event__handle {
 	width: 16px;
 	height: 16px;

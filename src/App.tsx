@@ -6,6 +6,8 @@ import {
 	PointerSensor,
 	pointerWithin,
 	type DragEndEvent,
+	type DragMoveEvent,
+	type DragOverEvent,
 	type DragStartEvent,
 	type Modifier,
 	useSensor,
@@ -45,7 +47,6 @@ interface ActiveDragState {
 	id: string;
 	width: number;
 	height: number;
-	lane: number;
 }
 
 interface ActiveResizeState {
@@ -96,6 +97,7 @@ function App() {
 	const [activeResize, setActiveResize] = useState<ActiveResizeState | null>(
 		null,
 	);
+	const [dragPreview, setDragPreview] = useState<TimelineEvent | null>(null);
 	const [editingEventId, setEditingEventId] = useState<string | null>(null);
 	const [suppressedEditEventId, setSuppressedEditEventId] = useState<string | null>(
 		null,
@@ -115,42 +117,54 @@ function App() {
 	const activeEvent = activeDrag
 		? events.find((event) => event.id === activeDrag.id) ?? null
 		: null;
-	const snapDragToRow: Modifier = ({ transform, activeNodeRect, over }) => {
-		if (!activeNodeRect || !activeEvent) {
-			return transform;
-		}
-
-		if (!over) {
-			return {
-				...transform,
-				y: 0,
-			};
-		}
-
-		const dropTarget = getDropTarget(String(over.id));
-
+	const getDragPreview = (
+		draggedEvent: TimelineEvent,
+		dropTarget: ReturnType<typeof getDropTarget>,
+	) => {
 		if (!dropTarget) {
-			return transform;
+			return null;
 		}
 
 		const nextPosition = moveTimelineEventToWeek(
-			activeEvent,
+			draggedEvent,
 			dropTarget.year,
 			dropTarget.weekNumber,
-			activeEvent.lane,
+			draggedEvent.lane,
 		);
-		const nextLane =
-			findAvailableLane(
-				events,
-				dropTarget.year,
-				nextPosition.beginDay,
-				nextPosition.endDay,
-				activeEvent.id,
-			) ?? activeDrag?.lane ?? activeEvent.lane;
+		const nextLane = findAvailableLane(
+			events,
+			dropTarget.year,
+			nextPosition.beginDay,
+			nextPosition.endDay,
+			draggedEvent.id,
+		);
+
+		if (nextLane === null) {
+			return null;
+		}
+
+		return {
+			...draggedEvent,
+			year: dropTarget.year,
+			beginDay: nextPosition.beginDay,
+			endDay: nextPosition.endDay,
+			lane: nextLane,
+		};
+	};
+	const snapDragToRow: Modifier = ({ transform, activeNodeRect, over }) => {
+		if (!activeNodeRect || !activeEvent || !over) {
+			return transform;
+		}
+
+		const preview = getDragPreview(activeEvent, getDropTarget(String(over.id)));
+
+		if (!preview) {
+			return transform;
+		}
 
 		return {
 			...transform,
-			y: over.rect.top + getEventLaneTop(nextLane) - activeNodeRect.top,
+			y: over.rect.top + getEventLaneTop(preview.lane) - activeNodeRect.top,
 		};
 	};
 
@@ -184,8 +198,8 @@ function App() {
 			id: activeId,
 			width: measuredWidth,
 			height: measuredHeight,
-			lane: timelineEvent?.lane ?? 0,
 		});
+		setDragPreview(null);
 		setSuppressedEditEventId(activeId);
 		setEditingEventId(null);
 	};
@@ -198,6 +212,19 @@ function App() {
 
 	const clearActiveDrag = () => {
 		setActiveDrag(null);
+		setDragPreview(null);
+	};
+
+	const updateDragPreview = (activeId: string, overId?: string | null) => {
+		const draggedEvent =
+			events.find((timelineEvent) => timelineEvent.id === activeId) ?? null;
+
+		if (!draggedEvent || !overId) {
+			setDragPreview(null);
+			return;
+		}
+
+		setDragPreview(getDragPreview(draggedEvent, getDropTarget(overId)));
 	};
 
 	const clearActiveResize = () => {
@@ -342,54 +369,47 @@ function App() {
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 		const activeId = String(active.id);
+		const draggedEvent =
+			events.find((timelineEvent) => timelineEvent.id === activeId) ?? null;
+		const preview = draggedEvent
+			? getDragPreview(
+					draggedEvent,
+					over?.id ? getDropTarget(String(over.id)) : null,
+				)
+			: null;
 
-		if (over && over.id) {
-			const dropTarget = getDropTarget(String(over.id));
-
-			if (dropTarget) {
-				setEvents((prev) => {
-					const draggedEvent =
-						prev.find((timelineEvent) => timelineEvent.id === String(active.id)) ??
-						null;
-
-					if (!draggedEvent) {
-						return prev;
-					}
-
-					const nextPosition = moveTimelineEventToWeek(
-						draggedEvent,
-						dropTarget.year,
-						dropTarget.weekNumber,
-						draggedEvent.lane,
-					);
-					const nextLane = findAvailableLane(
-						prev,
-						dropTarget.year,
-						nextPosition.beginDay,
-						nextPosition.endDay,
-						draggedEvent.id,
-					);
-
-					if (nextLane === null) {
-						return prev;
-					}
-
-					return prev.map((timelineEvent) =>
-						timelineEvent.id === draggedEvent.id
-							? moveTimelineEventToWeek(
-									timelineEvent,
-									dropTarget.year,
-									dropTarget.weekNumber,
-									nextLane,
-								)
-							: timelineEvent,
-						);
-				});
-			}
+		if (preview) {
+			setEvents((prev) =>
+				prev.map((timelineEvent) =>
+					timelineEvent.id === activeId
+						? {
+								...timelineEvent,
+								year: preview.year,
+								beginDay: preview.beginDay,
+								endDay: preview.endDay,
+								lane: preview.lane,
+							}
+						: timelineEvent,
+				),
+			);
 		}
 
 		clearActiveDrag();
 		releaseSuppressedEdit(activeId);
+	};
+
+	const handleDragOver = (event: DragOverEvent) => {
+		updateDragPreview(
+			String(event.active.id),
+			event.over?.id ? String(event.over.id) : null,
+		);
+	};
+
+	const handleDragMove = (event: DragMoveEvent) => {
+		updateDragPreview(
+			String(event.active.id),
+			event.over?.id ? String(event.over.id) : null,
+		);
 	};
 
 	const handleLogEvent = () => {
@@ -494,6 +514,8 @@ function App() {
 				key={timelineResetKey}
 				collisionDetection={pointerWithin}
 				onDragStart={handleDragStart}
+				onDragMove={handleDragMove}
+				onDragOver={handleDragOver}
 				onDragEnd={handleDragEnd}
 				onDragCancel={() => {
 					if (activeDrag) {
@@ -509,6 +531,7 @@ function App() {
 							key={year}
 							year={year}
 							events={events.filter((e) => e.year === year)}
+							previewEvent={dragPreview?.year === year ? dragPreview : null}
 							activeResizeId={activeResize?.id ?? null}
 							editingEventId={editingEventId}
 							suppressedEditEventId={suppressedEditEventId}
