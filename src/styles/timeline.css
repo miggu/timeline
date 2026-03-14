@@ -11,8 +11,10 @@
 	top: 1.5rem;
 	left: 50%;
 	transform: translateX(-50%);
-	font-size: clamp(3rem, 8vw, 6rem);
+	font-size: clamp(1.65rem, 5.8vw, 6rem);
 	font-weight: 200;
+	line-height: 0.95;
+	white-space: nowrap;
 	color: var(--text-primary);
 	margin: 0;
 	pointer-events: none;
