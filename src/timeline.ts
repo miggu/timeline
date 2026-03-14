@@ -65,13 +65,31 @@ export const getDayForWeek = (year: number, weekNumber: number) => {
 	);
 };
 
-const snapDayToWeek = (year: number, day: number) => {
+const getWeekNumberForDay = (year: number, day: number) => {
 	const dayCount = getDaysInYear(year);
-	const weekNumber =
-		Math.round(((clamp(day, 1, dayCount) - 1) / dayCount) * WEEK_COUNT) + 1;
 
-	return getDayForWeek(year, weekNumber);
+	return (
+		Math.round(((clamp(day, 1, dayCount) - 1) / dayCount) * WEEK_COUNT) + 1
+	);
 };
+
+const getDayAfterWeek = (year: number, weekNumber: number) => {
+	if (weekNumber >= WEEK_COUNT) {
+		return getDaysInYear(year) + 1;
+	}
+
+	return getDayForWeek(year, weekNumber + 1);
+};
+
+export const getDayForWeekEnd = (year: number, weekNumber: number) =>
+	clamp(getDayAfterWeek(year, weekNumber) - 1, 1, getDaysInYear(year));
+
+const snapDayToWeek = (year: number, day: number) => {
+	return getDayForWeek(year, getWeekNumberForDay(year, day));
+};
+
+const snapDayToWeekEnd = (year: number, day: number) =>
+	getDayForWeekEnd(year, getWeekNumberForDay(year, day));
 
 export const getEventDurationDays = (event: TimelineEvent) =>
 	event.endDay - event.beginDay + 1;
@@ -181,7 +199,7 @@ export const resizeTimelineEvent = (
 	}
 
 	const nextEndDay = clamp(
-		snapDayToWeek(event.year, event.endDay + deltaDays),
+		snapDayToWeekEnd(event.year, event.endDay + deltaDays),
 		event.beginDay + MIN_EVENT_DURATION_DAYS - 1,
 		getDaysInYear(event.year),
 	);
