@@ -3,6 +3,7 @@ import type { ThemeMode, TimelineEvent } from "./types";
 
 const THEME_STORAGE_KEY = "timeline-theme";
 const EVENTS_STORAGE_KEY = "timeline-events";
+const OLDEST_YEAR_STORAGE_KEY = "timeline-oldest-year";
 
 export const DEFAULT_EVENTS: TimelineEvent[] = [
 	{
@@ -155,6 +156,30 @@ export const setStoredThemeMode = (themeMode: ThemeMode) => {
 	window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
 };
 
+export const getStoredOldestYear = (
+	defaultOldestYear: number,
+	currentYear: number,
+) => {
+	const storedValue = readStoredJson(OLDEST_YEAR_STORAGE_KEY);
+
+	if (typeof storedValue !== "number" || !Number.isFinite(storedValue)) {
+		return defaultOldestYear;
+	}
+
+	return clamp(Math.round(storedValue), 1, currentYear);
+};
+
+export const setStoredOldestYear = (oldestYear: number) => {
+	if (typeof window === "undefined") {
+		return;
+	}
+
+	window.localStorage.setItem(
+		OLDEST_YEAR_STORAGE_KEY,
+		JSON.stringify(oldestYear),
+	);
+};
+
 export const getStoredEvents = () => {
 	const storedValue = readStoredJson(EVENTS_STORAGE_KEY);
 
@@ -179,4 +204,5 @@ export const clearStoredTimelineData = () => {
 	}
 
 	window.localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify([]));
+	window.localStorage.removeItem(OLDEST_YEAR_STORAGE_KEY);
 };
