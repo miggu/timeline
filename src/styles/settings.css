@@ -12,26 +12,6 @@
 	min-width: 200px;
 }
 
-.settings__header {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	font-weight: 500;
-	margin-bottom: 1rem;
-	color: var(--text-primary);
-	font-size: 0.9rem;
-}
-
-.settings__icon {
-	width: 1rem;
-	height: 1rem;
-	fill: none;
-	stroke: var(--text-secondary);
-	stroke-width: 2;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-}
-
 .settings__group {
 	display: flex;
 	flex-direction: column;
