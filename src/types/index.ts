@@ -5,6 +5,7 @@ export interface TimelineEvent {
 	widthPercent: number;
 	colorIndex: number;
 	label: string;
+	lane: number;
 }
 
 export type ResizeEdge = "start" | "end";

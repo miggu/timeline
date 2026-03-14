@@ -38,9 +38,9 @@
 }
 
 .timeline-row__track {
-	height: 44px;
+	height: 76px;
 	background-color: var(--track-bg);
-	border-radius: 12px;
+	border-radius: 18px;
 	display: flex;
 	position: relative;
 	overflow: visible;

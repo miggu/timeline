@@ -24,9 +24,10 @@ import {
 } from "./local-storage";
 import type { ResizeEdge, ThemeMode, TimelineEvent } from "./types";
 import {
-	EVENT_BLOCK_TOP,
 	LOG_EVENT_WIDTH_PERCENT,
+	findAvailableLane,
 	findNextEventPlacement,
+	getEventLaneTop,
 	moveTimelineEventToWeek,
 	resizeTimelineEvent,
 } from "./timeline";
@@ -35,6 +36,7 @@ interface ActiveDragState {
 	id: string;
 	width: number;
 	height: number;
+	lane: number;
 }
 
 interface ActiveResizeState {
@@ -46,21 +48,16 @@ interface ActiveResizeState {
 	trackWidth: number;
 }
 
-const snapDragToRow: Modifier = ({ transform, activeNodeRect, over }) => {
-	if (!activeNodeRect) {
-		return transform;
-	}
+const getDropTarget = (id: string) => {
+	const match = id.match(/week-(\d+)-(\d+)/);
 
-	if (!over) {
-		return {
-			...transform,
-			y: 0,
-		};
+	if (!match) {
+		return null;
 	}
 
 	return {
-		...transform,
-		y: over.rect.top + EVENT_BLOCK_TOP - activeNodeRect.top,
+		year: Number.parseInt(match[1], 10),
+		weekNumber: Number.parseInt(match[2], 10),
 	};
 };
 
@@ -95,6 +92,44 @@ const App: React.FC = () => {
 	const activeEvent = activeDrag
 		? events.find((event) => event.id === activeDrag.id) ?? null
 		: null;
+	const snapDragToRow: Modifier = ({ transform, activeNodeRect, over }) => {
+		if (!activeNodeRect || !activeEvent) {
+			return transform;
+		}
+
+		if (!over) {
+			return {
+				...transform,
+				y: 0,
+			};
+		}
+
+		const dropTarget = getDropTarget(String(over.id));
+
+		if (!dropTarget) {
+			return transform;
+		}
+
+		const nextPosition = moveTimelineEventToWeek(
+			activeEvent,
+			dropTarget.year,
+			dropTarget.weekNumber,
+			activeEvent.lane,
+		);
+		const nextLane =
+			findAvailableLane(
+				events,
+				dropTarget.year,
+				nextPosition.leftPercent,
+				activeEvent.widthPercent,
+				activeEvent.id,
+			) ?? activeDrag?.lane ?? activeEvent.lane;
+
+		return {
+			...transform,
+			y: over.rect.top + getEventLaneTop(nextLane) - activeNodeRect.top,
+		};
+	};
 
 	const handleDragStart = (event: DragStartEvent) => {
 		const activeId = String(event.active.id);
@@ -121,6 +156,7 @@ const App: React.FC = () => {
 			id: activeId,
 			width: measuredWidth,
 			height: measuredHeight,
+			lane: timelineEvent?.lane ?? 0,
 		});
 		setEditingEventId(null);
 	};
@@ -240,22 +276,48 @@ const App: React.FC = () => {
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 
-		// If dropped over a valid week cell
 		if (over && over.id) {
-			const dropId = String(over.id); // e.g. "week-2024-5"
-			const match = dropId.match(/week-(\d+)-(\d+)/);
+			const dropTarget = getDropTarget(String(over.id));
 
-			if (match) {
-				const dropYear = Number.parseInt(match[1], 10);
-				const dropWeek = Number.parseInt(match[2], 10);
+			if (dropTarget) {
+				setEvents((prev) => {
+					const draggedEvent =
+						prev.find((timelineEvent) => timelineEvent.id === String(active.id)) ??
+						null;
 
-				setEvents((prev) =>
-					prev.map((ev) =>
-						ev.id === String(active.id)
-							? moveTimelineEventToWeek(ev, dropYear, dropWeek)
-							: ev,
-						),
+					if (!draggedEvent) {
+						return prev;
+					}
+
+					const nextPosition = moveTimelineEventToWeek(
+						draggedEvent,
+						dropTarget.year,
+						dropTarget.weekNumber,
+						draggedEvent.lane,
 					);
+					const nextLane = findAvailableLane(
+						prev,
+						dropTarget.year,
+						nextPosition.leftPercent,
+						draggedEvent.widthPercent,
+						draggedEvent.id,
+					);
+
+					if (nextLane === null) {
+						return prev;
+					}
+
+					return prev.map((timelineEvent) =>
+						timelineEvent.id === draggedEvent.id
+							? moveTimelineEventToWeek(
+									timelineEvent,
+									dropTarget.year,
+									dropTarget.weekNumber,
+									nextLane,
+								)
+							: timelineEvent,
+						);
+				});
 			}
 		}
 
@@ -284,6 +346,7 @@ const App: React.FC = () => {
 					widthPercent: LOG_EVENT_WIDTH_PERCENT,
 					colorIndex: prev.length,
 					label: "",
+					lane: placement.lane,
 				},
 			];
 		});

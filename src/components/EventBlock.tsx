@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { ResizeEdge } from "../types";
-import { getEventPaletteColor } from "../timeline";
+import { getEventLaneTop, getEventPaletteColor } from "../timeline";
 
 // SVG Icons
 const ChevronLeft = () => (
@@ -21,6 +21,7 @@ interface EventBlockProps {
 	widthPercent: number;
 	colorIndex: number;
 	label: string;
+	lane: number;
 	isEditing: boolean;
 	isResizeActive: boolean;
 	onCancelEditing: (id: string) => void;
@@ -52,6 +53,7 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 	widthPercent,
 	colorIndex,
 	label,
+	lane,
 	isEditing,
 	isResizeActive,
 	onCancelEditing,
@@ -145,6 +147,7 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 
 	const style: EventBlockStyle = {
 		left: `${leftPercent}%`,
+		top: `${getEventLaneTop(lane)}px`,
 		width: `${widthPercent}%`,
 		transform: transform
 			? `translate3d(${transform.x}px, 0, 0)`

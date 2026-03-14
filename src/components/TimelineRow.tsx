@@ -46,6 +46,11 @@ export const TimelineRow: React.FC<TimelineRowProps> = ({
 	onResizeStart,
 	onStartEditing,
 }) => {
+	const sortedEvents = [...events].sort(
+		(left, right) =>
+			left.lane - right.lane || left.leftPercent - right.leftPercent,
+	);
+
 	return (
 		<div className="timeline-row" id={`row-${year}`}>
 			<div className="timeline-row__year">
@@ -70,7 +75,7 @@ export const TimelineRow: React.FC<TimelineRowProps> = ({
 					<WeekCell key={i} year={year} weekNumber={i + 1} />
 				))}
 
-				{events.map((event) => (
+				{sortedEvents.map((event) => (
 					<EventBlock
 						key={event.id}
 						{...event}

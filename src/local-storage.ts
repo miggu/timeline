@@ -16,6 +16,7 @@ export const DEFAULT_EVENTS: TimelineEvent[] = [
 		widthPercent: 15,
 		colorIndex: 0,
 		label: "",
+		lane: 0,
 	},
 	{
 		id: "e2",
@@ -24,6 +25,7 @@ export const DEFAULT_EVENTS: TimelineEvent[] = [
 		widthPercent: 12,
 		colorIndex: 1,
 		label: "",
+		lane: 0,
 	},
 	{
 		id: "e3",
@@ -32,6 +34,7 @@ export const DEFAULT_EVENTS: TimelineEvent[] = [
 		widthPercent: 8,
 		colorIndex: 2,
 		label: "",
+		lane: 0,
 	},
 ];
 
@@ -66,13 +69,15 @@ const isTimelineEvent = (value: unknown): value is TimelineEvent => {
 		typeof event.leftPercent === "number" &&
 		typeof event.widthPercent === "number" &&
 		typeof event.colorIndex === "number" &&
-		(typeof event.label === "string" || typeof event.label === "undefined")
+		(typeof event.label === "string" || typeof event.label === "undefined") &&
+		(typeof event.lane === "number" || typeof event.lane === "undefined")
 	);
 };
 
 const normalizeTimelineEvent = (event: TimelineEvent): TimelineEvent => ({
 	...event,
 	label: typeof event.label === "string" ? event.label : "",
+	lane: typeof event.lane === "number" ? event.lane : 0,
 });
 
 export const getStoredThemeMode = (): ThemeMode => {
