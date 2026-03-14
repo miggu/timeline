@@ -1,16 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ThemeSwitch } from "./ThemeSwitch";
 
-const ThemeIcon = () => (
-	<svg
-		viewBox="0 0 24 24"
-		className="settings__icon"
-		aria-hidden="true"
-	>
-		<path d="M19 15.5A7.5 7.5 0 0 1 8.5 5 8 8 0 1 0 19 15.5Z" />
-	</svg>
-);
-
 const SettingsIcon = () => (
 	<svg
 		viewBox="0 0 24 24"
@@ -113,16 +103,11 @@ export function Settings({
 			{isOpen ? (
 				<div className="settings__panel" id="settings-panel">
 					<div className="settings__group">
-						<div className="settings__toggle-row">
-							<span className="settings__icon-label">
-								<ThemeIcon />
-							</span>
-							<ThemeSwitch
-								id="dark-mode-switch"
-								checked={isDarkMode}
-								onChange={setIsDarkMode}
-							/>
-						</div>
+						<ThemeSwitch
+							id="dark-mode-switch"
+							checked={isDarkMode}
+							onChange={setIsDarkMode}
+						/>
 					</div>
 
 					<div className="settings__group">
