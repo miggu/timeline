@@ -4,9 +4,8 @@
 }
 
 .timeline-row__months {
-	display: flex;
-	justify-content: space-between;
-	padding: 0 0.5rem;
+	position: relative;
+	height: 1.35rem;
 	margin-bottom: 0.5rem;
 	color: var(--text-secondary);
 	font-size: 0.85rem;
@@ -14,16 +13,17 @@
 }
 
 .timeline-row__month {
-	flex: 1;
-	text-align: center;
-	position: relative;
+	position: absolute;
+	bottom: 0;
+	text-align: left;
+	white-space: nowrap;
 }
 
 .timeline-row__month::after {
 	content: "";
 	position: absolute;
 	bottom: -0.5rem;
-	left: 50%;
+	left: 0;
 	width: 1px;
 	height: 0.5rem;
 	background: var(--track-border);
@@ -40,14 +40,18 @@
 
 .timeline-row__year-marker {
 	position: absolute;
-	top: 50%;
-	left: 0.2rem;
+	inset: 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	pointer-events: none;
+}
+
+.timeline-row__year-slot {
+	flex: 1;
+	position: relative;
+	border-right: 1px solid var(--track-border);
 	z-index: 1;
-	transform: translateY(-50%);
 }
 
 .timeline-row__year-text {

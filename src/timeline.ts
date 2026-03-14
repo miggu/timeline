@@ -1,6 +1,8 @@
 import type { ResizeEdge, TimelineEvent } from "./types";
 
 export const WEEK_COUNT = 52;
+export const YEAR_PLACEHOLDER_COLUMN_COUNT = 1;
+export const TRACK_COLUMN_COUNT = WEEK_COUNT + YEAR_PLACEHOLDER_COLUMN_COUNT;
 export const MAX_EVENT_LANES = 3;
 export const EVENT_BLOCK_TOP = 10;
 export const EVENT_BLOCK_HEIGHT = 24;
@@ -20,6 +22,8 @@ const clamp = (value: number, min: number, max: number) =>
 	Math.min(Math.max(value, min), max);
 
 const roundPercent = (value: number) => Number(value.toFixed(6));
+const getDayOffset = (year: number, day: number) =>
+	(clamp(day, 1, getDaysInYear(year)) - 1) / getDaysInYear(year);
 const doIntervalsOverlap = (
 	beginA: number,
 	endA: number,
@@ -29,6 +33,26 @@ const doIntervalsOverlap = (
 
 export const getDaysInYear = (year: number) =>
 	new Date(year, 1, 29).getMonth() === 1 ? 366 : 365;
+
+export const getDayOfYear = (date: Date) => {
+	const startOfYear = new Date(date.getFullYear(), 0, 1);
+	const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+	return (
+		Math.floor(
+			(date.getTime() - startOfYear.getTime()) / millisecondsPerDay,
+		) + 1
+	);
+};
+
+export const getTrackPlaceholderPercent = () =>
+	roundPercent((YEAR_PLACEHOLDER_COLUMN_COUNT / TRACK_COLUMN_COUNT) * 100);
+
+export const getTrackTimelinePercent = () =>
+	roundPercent((WEEK_COUNT / TRACK_COLUMN_COUNT) * 100);
+
+export const getTrackTimelineWidth = (trackWidth: number) =>
+	(trackWidth * getTrackTimelinePercent()) / 100;
 
 export const getDayForWeek = (year: number, weekNumber: number) => {
 	const dayCount = getDaysInYear(year);
@@ -53,7 +77,10 @@ export const getEventDurationDays = (event: TimelineEvent) =>
 	event.endDay - event.beginDay + 1;
 
 export const getEventLeftPercent = (year: number, beginDay: number) =>
-	roundPercent(((clamp(beginDay, 1, getDaysInYear(year)) - 1) / getDaysInYear(year)) * 100);
+	roundPercent(
+		getTrackPlaceholderPercent() +
+			getDayOffset(year, beginDay) * getTrackTimelinePercent(),
+	);
 
 export const getEventWidthPercent = (
 	year: number,
@@ -65,7 +92,14 @@ export const getEventWidthPercent = (
 			clamp(beginDay, 1, getDaysInYear(year)) +
 			1) /
 			getDaysInYear(year)) *
-			100,
+			getTrackTimelinePercent(),
+	);
+
+export const getMonthStartPercent = (year: number, monthIndex: number) =>
+	roundPercent(
+		getTrackPlaceholderPercent() +
+			getDayOffset(year, getDayOfYear(new Date(year, monthIndex, 1))) *
+				getTrackTimelinePercent(),
 	);
 
 const clampEventRange = (

@@ -35,6 +35,7 @@ import {
 	getDaysInYear,
 	getEventWidthPercent,
 	getEventLaneTop,
+	getTrackTimelineWidth,
 	moveTimelineEventToWeek,
 	resizeTimelineEvent,
 } from "./timeline";
@@ -253,7 +254,7 @@ function App() {
 			startClientX: clientX,
 			startBeginDay: eventToResize.beginDay,
 			startEndDay: eventToResize.endDay,
-			trackWidth,
+			trackWidth: getTrackTimelineWidth(trackWidth),
 			year: eventToResize.year,
 		});
 	};

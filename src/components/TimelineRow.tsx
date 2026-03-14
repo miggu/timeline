@@ -1,6 +1,22 @@
 import { useDroppable } from "@dnd-kit/core";
 import { EventBlock } from "./EventBlock";
 import type { ResizeEdge, TimelineEvent } from "../types";
+import { getMonthStartPercent } from "../timeline";
+
+const MONTH_LABELS = [
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec",
+] as const;
 
 function WeekCell({
 	weekNumber,
@@ -60,22 +76,21 @@ export function TimelineRow({
 	return (
 		<div className="timeline-row" id={`row-${year}`}>
 			<div className="timeline-row__months">
-				<span className="timeline-row__month">Jan</span>
-				<span className="timeline-row__month">Feb</span>
-				<span className="timeline-row__month">Mar</span>
-				<span className="timeline-row__month">Apr</span>
-				<span className="timeline-row__month">May</span>
-				<span className="timeline-row__month">Jun</span>
-				<span className="timeline-row__month">Jul</span>
-				<span className="timeline-row__month">Aug</span>
-				<span className="timeline-row__month">Sep</span>
-				<span className="timeline-row__month">Oct</span>
-				<span className="timeline-row__month">Nov</span>
-				<span className="timeline-row__month">Dec</span>
+				{MONTH_LABELS.map((monthLabel, monthIndex) => (
+					<span
+						key={monthLabel}
+						className="timeline-row__month"
+						style={{ left: `${getMonthStartPercent(year, monthIndex)}%` }}
+					>
+						{monthLabel}
+					</span>
+				))}
 			</div>
 			<div className="timeline-row__track">
-				<div className="timeline-row__year-marker" aria-hidden="true">
-					<span className="timeline-row__year-text">{year}</span>
+				<div className="timeline-row__year-slot" aria-hidden="true">
+					<div className="timeline-row__year-marker">
+						<span className="timeline-row__year-text">{year}</span>
+					</div>
 				</div>
 				{Array.from({ length: 52 }, (_, i) => (
 					<WeekCell key={i} year={year} weekNumber={i + 1} />
