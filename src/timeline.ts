@@ -3,7 +3,7 @@ import type { ResizeEdge, TimelineEvent } from "./types";
 export const WEEK_COUNT = 52;
 export const WEEK_PERCENT = 100 / WEEK_COUNT;
 export const MIN_EVENT_WIDTH_PERCENT = WEEK_PERCENT;
-export const MAX_EVENT_LANES = 2;
+export const MAX_EVENT_LANES = 3;
 export const EVENT_BLOCK_TOP = 10;
 export const EVENT_BLOCK_HEIGHT = 24;
 export const EVENT_LANE_GAP = 8;
