@@ -80,13 +80,25 @@
 	color: var(--event-color, var(--accent-color));
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	pointer-events: none;
+	opacity: 0;
+	transform: scale(0.78);
+	transition:
+		opacity 0.16s ease,
+		transform 0.16s ease;
+}
+
+.timeline-event:hover .timeline-event__handle,
+.timeline-event:focus-visible .timeline-event__handle,
+.timeline-event--resizing .timeline-event__handle {
+	opacity: 1;
+	transform: scale(1);
 }
 
 .timeline-event__resize-hit {
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	width: clamp(4px, 22%, 6px);
+	width: clamp(6px, 26%, 10px);
 	background: transparent;
 	cursor: ew-resize;
 	touch-action: none;
