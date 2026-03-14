@@ -17,10 +17,8 @@ import { Settings } from "./components/Settings";
 import {
   clearStoredTimelineData,
   getStoredEvents,
-  getStoredOldestYear,
   getStoredThemeMode,
   setStoredEvents,
-  setStoredOldestYear,
   setStoredThemeMode,
 } from "./local-storage";
 import type {
@@ -93,6 +91,28 @@ const getDropTarget = (id: string) => {
   };
 };
 
+const getOldestEventYear = (events: TimelineEvent[]) => {
+  if (events.length === 0) {
+    return null;
+  }
+
+  return events.reduce(
+    (oldestYear, event) => Math.min(oldestYear, event.year),
+    events[0].year,
+  );
+};
+
+const getInitialOldestYear = (
+  events: TimelineEvent[],
+  defaultOldestYear: number,
+) => {
+  const oldestEventYear = getOldestEventYear(events);
+
+  return oldestEventYear === null
+    ? defaultOldestYear
+    : Math.min(defaultOldestYear, oldestEventYear);
+};
+
 const getPointerClientX = (activatorEvent: Event | undefined) => {
   if (!activatorEvent) {
     return null;
@@ -146,9 +166,10 @@ const getAnchorOffsetDays = (
 function App() {
   const currentYear = 2026;
   const initialOldestYear = currentYear - INITIAL_YEARS_TO_DISPLAY + 1;
+  const [events, setEvents] = useState<TimelineEvent[]>(getStoredEvents);
   const [themeMode, setThemeMode] = useState<ThemeMode>(getStoredThemeMode);
   const [oldestYear, setOldestYear] = useState(() =>
-    getStoredOldestYear(initialOldestYear, currentYear),
+    getInitialOldestYear(events, initialOldestYear),
   );
 
   // Calculate the array of years to map over
@@ -157,7 +178,6 @@ function App() {
     (_, i) => oldestYear + i,
   );
 
-  const [events, setEvents] = useState<TimelineEvent[]>(getStoredEvents);
   const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
   const [activeResize, setActiveResize] = useState<ActiveResizeState | null>(
     null,
@@ -368,10 +388,6 @@ function App() {
   useEffect(() => {
     setStoredEvents(events);
   }, [events]);
-
-  useEffect(() => {
-    setStoredOldestYear(oldestYear);
-  }, [oldestYear]);
 
   useEffect(() => {
     lastScrollYRef.current = window.scrollY;
