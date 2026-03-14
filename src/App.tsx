@@ -8,7 +8,6 @@ import {
   type DragEndEvent,
   type DragMoveEvent,
   type DragStartEvent,
-  type Modifier,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -36,7 +35,6 @@ import {
   getDayForWeek,
   getDaysInYear,
   getEventWidthPercent,
-  getEventLaneTop,
   getTrackTimelineWidth,
   moveTimelineEventToWeek,
   resizeTimelineEvent,
@@ -170,22 +168,6 @@ function App() {
       beginDay: nextPosition.beginDay,
       endDay: nextPosition.endDay,
       lane: nextLane,
-    };
-  };
-  const snapDragToRow: Modifier = ({ transform, activeNodeRect, over }) => {
-    if (!activeNodeRect || !activeEvent || !over) {
-      return transform;
-    }
-
-    const preview = getDragPreview(activeEvent, getDropTarget(String(over.id)));
-
-    if (!preview) {
-      return transform;
-    }
-
-    return {
-      ...transform,
-      y: over.rect.top + getEventLaneTop(preview.lane) - activeNodeRect.top,
     };
   };
 
@@ -649,7 +631,6 @@ function App() {
         </div>
         <DragOverlay
           dropAnimation={null}
-          modifiers={[snapDragToRow]}
           zIndex={2000}
         >
           {activeEvent && activeDrag ? (
