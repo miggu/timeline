@@ -18,6 +18,9 @@
 	--surface-hover: #edf3f9;
 	--surface-elevated: rgba(255, 255, 255, 0.85);
 	--handle-bg: #ffffff;
+	--danger-color: #b91c1c;
+	--danger-surface: rgba(185, 28, 28, 0.08);
+	--danger-surface-hover: rgba(185, 28, 28, 0.16);
 	--panel-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
@@ -36,5 +39,8 @@
 	--surface-hover: #1c2a3b;
 	--surface-elevated: rgba(17, 25, 36, 0.88);
 	--handle-bg: #f5f8fc;
+	--danger-color: #fca5a5;
+	--danger-surface: rgba(248, 113, 113, 0.14);
+	--danger-surface-hover: rgba(248, 113, 113, 0.22);
 	--panel-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
 }

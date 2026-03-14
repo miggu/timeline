@@ -32,14 +32,17 @@ interface EventBlockProps {
 	lane: number;
 	isEditing: boolean;
 	isResizeActive: boolean;
+	isSelected: boolean;
 	onCancelEditing: (id: string) => void;
 	onCommitLabel: (id: string, label: string) => void;
+	onDelete: (id: string) => void;
 	onResizeStart: (
 		id: string,
 		edge: ResizeEdge,
 		clientX: number,
 		trackWidth: number,
 	) => void;
+	onSelect: (id: string) => void;
 	onStartEditing: (id: string) => void;
 }
 
@@ -64,9 +67,12 @@ export function EventBlock({
 	lane,
 	isEditing,
 	isResizeActive,
+	isSelected,
 	onCancelEditing,
 	onCommitLabel,
+	onDelete,
 	onResizeStart,
+	onSelect,
 	onStartEditing,
 }: EventBlockProps) {
 	const inputRef = useRef<HTMLInputElement | null>(null);
@@ -111,6 +117,21 @@ export function EventBlock({
 		};
 
 	const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+		if (isDragging || isEditing || isResizeActive) {
+			return;
+		}
+
+		if (
+			event.target instanceof Element &&
+			event.target.closest(".timeline-event__handle")
+		) {
+			return;
+		}
+
+		onSelect(id);
+	};
+
+	const handleDoubleClick = (event: MouseEvent<HTMLDivElement>) => {
 		if (isDragging || isEditing || isResizeActive) {
 			return;
 		}
@@ -170,14 +191,43 @@ export function EventBlock({
 	return (
 		<div
 			ref={setNodeRef}
-			className={`timeline-event${
-				isEditing ? " timeline-event--editing" : ""
-			}${isResizeActive ? " timeline-event--resizing" : ""}`}
-			style={style}
-			onClick={handleClick}
 			{...listeners}
 			{...attributes}
+			className={`timeline-event${
+				isEditing ? " timeline-event--editing" : ""
+			}${isResizeActive ? " timeline-event--resizing" : ""}${
+				isSelected ? " timeline-event--selected" : ""
+			}`}
+			style={style}
+			role="button"
+			tabIndex={isEditing ? -1 : 0}
+			aria-pressed={isSelected}
+			onClick={handleClick}
+			onDoubleClick={handleDoubleClick}
+			onFocus={() => onSelect(id)}
 		>
+			{isSelected && !isEditing && !isResizeActive ? (
+				<div
+					className="timeline-event__toolbar"
+					onClick={(event) => event.stopPropagation()}
+					onPointerDown={(event) => event.stopPropagation()}
+				>
+					<button
+						className="timeline-event__toolbar-button"
+						type="button"
+						onClick={() => onStartEditing(id)}
+					>
+						Edit
+					</button>
+					<button
+						className="timeline-event__toolbar-button timeline-event__toolbar-button--danger"
+						type="button"
+						onClick={() => onDelete(id)}
+					>
+						Delete
+					</button>
+				</div>
+			) : null}
 			<div
 				className="timeline-event__handle timeline-event__handle--start"
 				onPointerDown={handleResizePointerDown("start")}

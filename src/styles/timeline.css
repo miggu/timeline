@@ -29,3 +29,44 @@
 	gap: 5rem;
 	margin-bottom: 3rem;
 }
+
+.timeline__toast {
+	position: fixed;
+	left: 50%;
+	bottom: 1.5rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.85rem;
+	padding: 0.8rem 0.95rem;
+	border-radius: 999px;
+	background: var(--surface-elevated);
+	border: 1px solid var(--border-color);
+	box-shadow: var(--panel-shadow);
+	transform: translateX(-50%);
+	z-index: 3000;
+}
+
+.timeline__toast-message {
+	color: var(--text-primary);
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.timeline__toast-action {
+	border: none;
+	border-radius: 999px;
+	background: var(--surface-hover);
+	color: var(--text-primary);
+	font-size: 0.8rem;
+	font-weight: 700;
+	line-height: 1;
+	padding: 0.55rem 0.8rem;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.timeline__toast-action:hover,
+.timeline__toast-action:focus-visible {
+	background: var(--surface-bg);
+	outline: none;
+}

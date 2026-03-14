@@ -27,14 +27,17 @@ interface TimelineRowProps {
 	events?: TimelineEvent[];
 	activeResizeId: string | null;
 	editingEventId: string | null;
+	selectedEventId: string | null;
 	onCancelEditing: (id: string) => void;
 	onCommitLabel: (id: string, label: string) => void;
+	onDeleteEvent: (id: string) => void;
 	onResizeStart: (
 		id: string,
 		edge: ResizeEdge,
 		clientX: number,
 		trackWidth: number,
 	) => void;
+	onSelectEvent: (id: string) => void;
 	onStartEditing: (id: string) => void;
 }
 
@@ -43,9 +46,12 @@ export function TimelineRow({
 	events = [],
 	activeResizeId,
 	editingEventId,
+	selectedEventId,
 	onCancelEditing,
 	onCommitLabel,
+	onDeleteEvent,
 	onResizeStart,
+	onSelectEvent,
 	onStartEditing,
 }: TimelineRowProps) {
 	const sortedEvents = [...events].sort(
@@ -83,9 +89,12 @@ export function TimelineRow({
 						{...event}
 						isEditing={editingEventId === event.id}
 						isResizeActive={activeResizeId === event.id}
+						isSelected={selectedEventId === event.id}
 						onCancelEditing={onCancelEditing}
 						onCommitLabel={onCommitLabel}
+						onDelete={onDeleteEvent}
 						onResizeStart={onResizeStart}
+						onSelect={onSelectEvent}
 						onStartEditing={onStartEditing}
 					/>
 				))}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import {
 	DndContext,
 	DragOverlay,
@@ -48,6 +48,10 @@ interface ActiveResizeState {
 	trackWidth: number;
 }
 
+interface RecentlyDeletedEventState {
+	event: TimelineEvent;
+}
+
 const getDropTarget = (id: string) => {
 	const match = id.match(/week-(\d+)-(\d+)/);
 
@@ -60,6 +64,15 @@ const getDropTarget = (id: string) => {
 		weekNumber: Number.parseInt(match[2], 10),
 	};
 };
+
+const isEditableTarget = (target: EventTarget | null) =>
+	target instanceof HTMLElement &&
+		(target.isContentEditable ||
+			target instanceof HTMLInputElement ||
+			target instanceof HTMLTextAreaElement ||
+			target instanceof HTMLSelectElement ||
+			target instanceof HTMLButtonElement ||
+			target instanceof HTMLAnchorElement);
 
 function App() {
 	const currentYear = 2026;
@@ -80,6 +93,9 @@ function App() {
 		null,
 	);
 	const [editingEventId, setEditingEventId] = useState<string | null>(null);
+	const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+	const [recentlyDeletedEvent, setRecentlyDeletedEvent] =
+		useState<RecentlyDeletedEventState | null>(null);
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
@@ -158,6 +174,7 @@ function App() {
 			height: measuredHeight,
 			lane: timelineEvent?.lane ?? 0,
 		});
+		setSelectedEventId(null);
 		setEditingEventId(null);
 	};
 
@@ -172,10 +189,12 @@ function App() {
 	const handleStartEditing = (id: string) => {
 		clearActiveDrag();
 		clearActiveResize();
+		setSelectedEventId(id);
 		setEditingEventId(id);
 	};
 
 	const handleCancelEditing = (id: string) => {
+		setSelectedEventId((selectedId) => (selectedId === id ? null : selectedId));
 		setEditingEventId((editingId) => (editingId === id ? null : editingId));
 	};
 
@@ -183,7 +202,30 @@ function App() {
 		setEvents((prev) =>
 			prev.map((event) => (event.id === id ? { ...event, label } : event)),
 		);
+		setSelectedEventId((selectedId) => (selectedId === id ? null : selectedId));
 		setEditingEventId((editingId) => (editingId === id ? null : editingId));
+	};
+
+	const handleSelectEvent = (id: string) => {
+		clearActiveDrag();
+		clearActiveResize();
+		setSelectedEventId(id);
+	};
+
+	const handleDeleteEvent = (id: string) => {
+		const eventToDelete =
+			events.find((timelineEvent) => timelineEvent.id === id) ?? null;
+
+		if (!eventToDelete) {
+			return;
+		}
+
+		setRecentlyDeletedEvent({ event: eventToDelete });
+		setEvents((prev) => prev.filter((timelineEvent) => timelineEvent.id !== id));
+		setSelectedEventId((currentId) => (currentId === id ? null : currentId));
+		setEditingEventId((currentId) => (currentId === id ? null : currentId));
+		clearActiveDrag();
+		clearActiveResize();
 	};
 
 	const handleResizeStart = (
@@ -200,6 +242,7 @@ function App() {
 
 		clearActiveDrag();
 		setEditingEventId(null);
+		setSelectedEventId(id);
 		setActiveResize({
 			id,
 			edge,
@@ -223,6 +266,62 @@ function App() {
 	useEffect(() => {
 		setStoredEvents(events);
 	}, [events]);
+
+	useEffect(() => {
+		if (!recentlyDeletedEvent) {
+			return;
+		}
+
+		const timeoutId = window.setTimeout(() => {
+			setRecentlyDeletedEvent(null);
+		}, 5000);
+
+		return () => {
+			window.clearTimeout(timeoutId);
+		};
+	}, [recentlyDeletedEvent]);
+
+	useEffect(() => {
+		if (!selectedEventId || editingEventId || activeResize) {
+			return;
+		}
+
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (isEditableTarget(event.target)) {
+				return;
+			}
+
+			if (event.key === "Escape") {
+				setSelectedEventId(null);
+				return;
+			}
+
+			if (event.key === "Enter" || event.key === "F2") {
+				event.preventDefault();
+				handleStartEditing(selectedEventId);
+				return;
+			}
+
+			if (event.key !== "Delete" && event.key !== "Backspace") {
+				return;
+			}
+
+			event.preventDefault();
+			handleDeleteEvent(selectedEventId);
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [
+		activeResize,
+		editingEventId,
+		handleDeleteEvent,
+		handleStartEditing,
+		selectedEventId,
+	]);
 
 	useEffect(() => {
 		if (!activeResize) {
@@ -352,8 +451,29 @@ function App() {
 		});
 	};
 
+	const handleUndoDelete = () => {
+		if (!recentlyDeletedEvent) {
+			return;
+		}
+
+		setEvents((prev) => [...prev, recentlyDeletedEvent.event]);
+		setSelectedEventId(recentlyDeletedEvent.event.id);
+		setRecentlyDeletedEvent(null);
+	};
+
+	const handleTimelinePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+		if (
+			event.target instanceof Element &&
+			event.target.closest(".timeline-event")
+		) {
+			return;
+		}
+
+		setSelectedEventId(null);
+	};
+
 	return (
-		<div className="timeline">
+		<div className="timeline" onPointerDown={handleTimelinePointerDown}>
 			<Settings
 				yearsToDisplay={yearsToDisplay}
 				setYearsToDisplay={setYearsToDisplay}
@@ -385,9 +505,12 @@ function App() {
 							events={events.filter((e) => e.year === year)}
 							activeResizeId={activeResize?.id ?? null}
 							editingEventId={editingEventId}
+							selectedEventId={selectedEventId}
 							onCancelEditing={handleCancelEditing}
 							onCommitLabel={handleCommitLabel}
+							onDeleteEvent={handleDeleteEvent}
 							onResizeStart={handleResizeStart}
+							onSelectEvent={handleSelectEvent}
 							onStartEditing={handleStartEditing}
 						/>
 					))}
@@ -425,6 +548,18 @@ function App() {
 					</button>
 				</div>
 			</div>
+			{recentlyDeletedEvent ? (
+				<div className="timeline__toast" role="status" aria-live="polite">
+					<span className="timeline__toast-message">Event deleted.</span>
+					<button
+						className="timeline__toast-action"
+						type="button"
+						onClick={handleUndoDelete}
+					>
+						Undo
+					</button>
+				</div>
+			) : null}
 		</div>
 	);
 }
