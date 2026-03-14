@@ -7,7 +7,6 @@ import {
 	pointerWithin,
 	type DragEndEvent,
 	type DragMoveEvent,
-	type DragOverEvent,
 	type DragStartEvent,
 	type Modifier,
 	useSensor,
@@ -462,13 +461,6 @@ function App() {
 		releaseSuppressedEdit(activeId);
 	};
 
-	const handleDragOver = (event: DragOverEvent) => {
-		updateDragPreview(
-			String(event.active.id),
-			event.over?.id ? String(event.over.id) : null,
-		);
-	};
-
 	const handleDragMove = (event: DragMoveEvent) => {
 		updateDragPreview(
 			String(event.active.id),
@@ -499,13 +491,13 @@ function App() {
 				return prev;
 			}
 
-				return [
-					...prev,
-					{
-						id: getNextEventId(prev),
-						year,
-						beginDay: safeBeginDay,
-						endDay,
+			return [
+				...prev,
+				{
+					id: getNextEventId(prev),
+					year,
+					beginDay: safeBeginDay,
+					endDay,
 					colorIndex: prev.length,
 					label: "",
 					lane,
@@ -518,7 +510,6 @@ function App() {
 		const exportPayload: TimelineExportData = {
 			version: 1,
 			exportedAt: new Date().toISOString(),
-			currentYear,
 			yearsToDisplay: years.length,
 			themeMode,
 			events: [...events].sort(
@@ -588,7 +579,6 @@ function App() {
 				collisionDetection={pointerWithin}
 				onDragStart={handleDragStart}
 				onDragMove={handleDragMove}
-				onDragOver={handleDragOver}
 				onDragEnd={handleDragEnd}
 				onDragCancel={() => {
 					if (activeDrag) {

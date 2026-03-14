@@ -14,7 +14,6 @@ export type ThemeMode = "light" | "dark";
 export interface TimelineExportData {
 	version: number;
 	exportedAt: string;
-	currentYear: number;
 	yearsToDisplay: number;
 	themeMode: ThemeMode;
 	events: TimelineEvent[];
