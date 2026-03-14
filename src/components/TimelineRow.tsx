@@ -21,9 +21,11 @@ const MONTH_LABELS = [
 function WeekCell({
 	weekNumber,
 	year,
+	onCreateEvent,
 }: {
 	weekNumber: number;
 	year: number;
+	onCreateEvent: (year: number, weekNumber: number) => void;
 }) {
 	const { setNodeRef, isOver } = useDroppable({
 		id: `week-${year}-${weekNumber}`,
@@ -34,6 +36,17 @@ function WeekCell({
 			ref={setNodeRef}
 			className={`timeline-row__week${isOver ? " timeline-row__week--active" : ""}`}
 			data-week={weekNumber}
+			role="button"
+			tabIndex={0}
+			onClick={() => onCreateEvent(year, weekNumber)}
+			onKeyDown={(event) => {
+				if (event.key !== "Enter" && event.key !== " ") {
+					return;
+				}
+
+				event.preventDefault();
+				onCreateEvent(year, weekNumber);
+			}}
 		/>
 	);
 }
@@ -45,6 +58,7 @@ interface TimelineRowProps {
 	activeResizeId: string | null;
 	editingEventId: string | null;
 	suppressedEditEventId: string | null;
+	onCreateEvent: (year: number, weekNumber: number) => void;
 	onCancelEditing: (id: string) => void;
 	onCommitLabel: (id: string, label: string) => void;
 	onDeleteEvent: (id: string) => void;
@@ -64,6 +78,7 @@ export function TimelineRow({
 	activeResizeId,
 	editingEventId,
 	suppressedEditEventId,
+	onCreateEvent,
 	onCancelEditing,
 	onCommitLabel,
 	onDeleteEvent,
@@ -95,7 +110,12 @@ export function TimelineRow({
 					</div>
 				</div>
 				{Array.from({ length: 52 }, (_, i) => (
-					<WeekCell key={i} year={year} weekNumber={i + 1} />
+					<WeekCell
+						key={i}
+						year={year}
+						weekNumber={i + 1}
+						onCreateEvent={onCreateEvent}
+					/>
 				))}
 				{previewEvent ? (
 					<EventBlockPreview

@@ -68,12 +68,19 @@
 	border-right: 1px solid var(--track-border);
 	position: relative;
 	transition: background-color 0.2s ease;
+	cursor: pointer;
 }
 
 .timeline-row__week:last-child {
 	border-right: none;
 }
 
+.timeline-row__week:hover,
+.timeline-row__week:focus-visible,
 .timeline-row__week--active {
 	background-color: var(--track-border);
+}
+
+.timeline-row__week:focus-visible {
+	outline: none;
 }

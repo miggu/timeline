@@ -91,7 +91,7 @@ const isTimelineEvent = (value: unknown): value is StoredTimelineEvent => {
 
 const normalizeTimelineEvent = (event: StoredTimelineEvent): TimelineEvent => {
 	const dayCount = getDaysInYear(event.year);
-	const label = typeof event.label === "string" ? event.label : "";
+	const label = typeof event.label === "string" ? event.label.trimEnd() : "";
 	const lane = typeof event.lane === "number" ? event.lane : 0;
 
 	if (typeof event.beginDay === "number" && typeof event.endDay === "number") {

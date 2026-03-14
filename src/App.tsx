@@ -32,7 +32,7 @@ import type {
 import {
 	LOG_EVENT_DURATION_DAYS,
 	findAvailableLane,
-	findNextEventPlacement,
+	getDayForWeek,
 	getDaysInYear,
 	getEventWidthPercent,
 	getEventLaneTop,
@@ -64,6 +64,20 @@ interface RecentlyDeletedEventState {
 const DRAG_ACTIVATION_DISTANCE = 8;
 const DRAG_CLICK_SUPPRESSION_MS = 120;
 const YEARS_TO_DISPLAY = 9;
+
+const getNextEventId = (events: TimelineEvent[]) => {
+	const highestNumericId = events.reduce((highestId, event) => {
+		const match = event.id.match(/^e(\d+)$/);
+
+		if (!match) {
+			return highestId;
+		}
+
+		return Math.max(highestId, Number.parseInt(match[1], 10));
+	}, 0);
+
+	return `e${highestNumericId + 1}`;
+};
 
 const getDropTarget = (id: string) => {
 	const match = id.match(/week-(\d+)-(\d+)/);
@@ -238,8 +252,12 @@ function App() {
 	};
 
 	const handleCommitLabel = (id: string, label: string) => {
+		const normalizedLabel = label.trimEnd();
+
 		setEvents((prev) =>
-			prev.map((event) => (event.id === id ? { ...event, label } : event)),
+			prev.map((event) =>
+				event.id === id ? { ...event, label: normalizedLabel } : event,
+			),
 		);
 		setEditingEventId((editingId) => (editingId === id ? null : editingId));
 	};
@@ -404,29 +422,39 @@ function App() {
 		);
 	};
 
-	const handleLogEvent = () => {
+	const handleCreateEvent = (year: number, weekNumber: number) => {
 		setEvents((prev) => {
-			const candidateYears = [...years].reverse();
-			const placement = findNextEventPlacement(
+			const beginDay = getDayForWeek(year, weekNumber);
+			const dayCount = getDaysInYear(year);
+			const safeBeginDay = Math.min(
+				beginDay,
+				dayCount - LOG_EVENT_DURATION_DAYS + 1,
+			);
+			const endDay = Math.min(
+				safeBeginDay + LOG_EVENT_DURATION_DAYS - 1,
+				dayCount,
+			);
+			const lane = findAvailableLane(
 				prev,
-				candidateYears,
-				LOG_EVENT_DURATION_DAYS,
+				year,
+				safeBeginDay,
+				endDay,
 			);
 
-			if (!placement) {
+			if (lane === null) {
 				return prev;
 			}
 
-			return [
-				...prev,
-				{
-					id: `e${prev.length + 1}`,
-					year: placement.year,
-					beginDay: placement.beginDay,
-					endDay: placement.endDay,
+				return [
+					...prev,
+					{
+						id: getNextEventId(prev),
+						year,
+						beginDay: safeBeginDay,
+						endDay,
 					colorIndex: prev.length,
 					label: "",
-					lane: placement.lane,
+					lane,
 				},
 			];
 		});
@@ -525,6 +553,7 @@ function App() {
 							activeResizeId={activeResize?.id ?? null}
 							editingEventId={editingEventId}
 							suppressedEditEventId={suppressedEditEventId}
+							onCreateEvent={handleCreateEvent}
 							onCancelEditing={handleCancelEditing}
 							onCommitLabel={handleCommitLabel}
 							onDeleteEvent={handleDeleteEvent}
@@ -548,24 +577,6 @@ function App() {
 					) : null}
 				</DragOverlay>
 			</DndContext>
-
-			<div className="timeline-controls">
-				<button
-					className="timeline-controls__primary"
-					onClick={handleLogEvent}
-					type="button"
-				>
-					Log Event
-				</button>
-				<div className="timeline-controls__pagination">
-					<button className="timeline-controls__page-button" type="button">
-						←
-					</button>
-					<button className="timeline-controls__page-button" type="button">
-						Next →
-					</button>
-				</div>
-			</div>
 			{recentlyDeletedEvent ? (
 				<div className="timeline__toast" role="status" aria-live="polite">
 					<span className="timeline__toast-message">Event deleted.</span>
