@@ -131,10 +131,19 @@ export const moveTimelineEventToWeek = (
 	year: number,
 	weekNumber: number,
 	lane: number,
+	anchorOffsetDays = 0,
 ): TimelineEvent => {
+	const safeAnchorOffsetDays = clamp(
+		anchorOffsetDays,
+		0,
+		Math.max(getEventDurationDays(event) - 1, 0),
+	);
 	const nextRange = clampEventRange(
 		year,
-		snapDayToWeek(year, getDayForWeek(year, weekNumber)),
+		snapDayToWeek(
+			year,
+			getDayForWeek(year, weekNumber) - safeAnchorOffsetDays,
+		),
 		getEventDurationDays(event),
 	);
 

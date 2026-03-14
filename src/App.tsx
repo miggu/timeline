@@ -34,6 +34,7 @@ import {
   findAvailableLane,
   getDayForWeek,
   getDaysInYear,
+  getEventDurationDays,
   getEventWidthPercent,
   getTrackTimelineWidth,
   moveTimelineEventToWeek,
@@ -44,6 +45,7 @@ interface ActiveDragState {
   id: string;
   width: number;
   height: number;
+  anchorOffsetDays: number;
 }
 
 interface ActiveResizeState {
@@ -89,6 +91,56 @@ const getDropTarget = (id: string) => {
     year: Number.parseInt(match[1], 10),
     weekNumber: Number.parseInt(match[2], 10),
   };
+};
+
+const getPointerClientX = (activatorEvent: Event | undefined) => {
+  if (!activatorEvent) {
+    return null;
+  }
+
+  const pointerEvent = activatorEvent as Event & {
+    changedTouches?: ArrayLike<{ clientX: number }>;
+    clientX?: number;
+    touches?: ArrayLike<{ clientX: number }>;
+  };
+
+  if (typeof pointerEvent.clientX === "number") {
+    return pointerEvent.clientX;
+  }
+
+  if (pointerEvent.touches && pointerEvent.touches.length > 0) {
+    return pointerEvent.touches[0]?.clientX ?? null;
+  }
+
+  if (pointerEvent.changedTouches && pointerEvent.changedTouches.length > 0) {
+    return pointerEvent.changedTouches[0]?.clientX ?? null;
+  }
+
+  return null;
+};
+
+const getAnchorOffsetDays = (
+  timelineEvent: TimelineEvent,
+  blockElement: HTMLElement | null,
+  pointerClientX: number | null,
+) => {
+  if (!blockElement || pointerClientX === null) {
+    return 0;
+  }
+
+  const { left, width } = blockElement.getBoundingClientRect();
+
+  if (width <= 0) {
+    return 0;
+  }
+
+  const durationDays = getEventDurationDays(timelineEvent);
+  const pointerRatio = Math.min(
+    Math.max((pointerClientX - left) / width, 0),
+    1,
+  );
+
+  return Math.round(pointerRatio * Math.max(durationDays - 1, 0));
 };
 
 function App() {
@@ -149,6 +201,7 @@ function App() {
       dropTarget.year,
       dropTarget.weekNumber,
       draggedEvent.lane,
+      activeDrag?.id === draggedEvent.id ? activeDrag.anchorOffsetDays : 0,
     );
     const nextLane = findAvailableLane(
       events,
@@ -182,6 +235,7 @@ function App() {
     const trackElement = blockElement?.closest(
       ".timeline-row__track",
     ) as HTMLElement | null;
+    const pointerClientX = getPointerClientX(event.activatorEvent);
     const initialRect =
       event.active.rect.current.initial ?? event.active.rect.current.translated;
     const measuredWidth =
@@ -201,6 +255,10 @@ function App() {
       id: activeId,
       width: measuredWidth,
       height: measuredHeight,
+      anchorOffsetDays:
+        timelineEvent === null
+          ? 0
+          : getAnchorOffsetDays(timelineEvent, blockElement, pointerClientX),
     });
     setDragPreview(null);
     setSuppressedEditEventId(activeId);
