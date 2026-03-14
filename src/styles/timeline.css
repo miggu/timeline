@@ -7,19 +7,16 @@
 }
 
 .timeline__title {
-	font-size: 1.5rem;
-	font-weight: 700;
+	position: fixed;
+	top: 1.5rem;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: clamp(3rem, 8vw, 6rem);
+	font-weight: 200;
 	color: var(--text-primary);
-	margin-bottom: 1rem;
-}
-
-.timeline__subtitle {
-	font-size: 1rem;
-	color: var(--text-secondary);
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	margin-bottom: 3rem;
+	margin: 0;
+	pointer-events: none;
+	z-index: 900;
 }
 
 .timeline__rows {
@@ -27,6 +24,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 5rem;
+	padding-top: 54px;
 	margin-bottom: 3rem;
 }
 

@@ -469,13 +469,7 @@ function App() {
 				}
 				onExportTimeline={handleExportTimeline}
 			/>
-			<h1 className="timeline__title">THIS IS YOUR LIFE.</h1>
-
-			<div className="timeline__subtitle">
-				<span>
-					A retrospective look at what you have been doing all this time.
-				</span>
-			</div>
+			<h1 className="timeline__title">This is your life.</h1>
 
 			<DndContext
 				collisionDetection={pointerWithin}
