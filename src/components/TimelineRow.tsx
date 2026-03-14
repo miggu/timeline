@@ -53,9 +53,6 @@ export const TimelineRow: React.FC<TimelineRowProps> = ({
 
 	return (
 		<div className="timeline-row" id={`row-${year}`}>
-			<div className="timeline-row__year">
-				{year}
-			</div>
 			<div className="timeline-row__months">
 				<span className="timeline-row__month">Jan</span>
 				<span className="timeline-row__month">Feb</span>
@@ -71,6 +68,9 @@ export const TimelineRow: React.FC<TimelineRowProps> = ({
 				<span className="timeline-row__month">Dec</span>
 			</div>
 			<div className="timeline-row__track">
+				<div className="timeline-row__year-marker" aria-hidden="true">
+					<span className="timeline-row__year-text">{year}</span>
+				</div>
 				{Array.from({ length: 52 }, (_, i) => (
 					<WeekCell key={i} year={year} weekNumber={i + 1} />
 				))}

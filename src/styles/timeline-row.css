@@ -3,14 +3,6 @@
 	width: 100%;
 }
 
-.timeline-row__year {
-	font-weight: 700;
-	margin-bottom: 0.5rem;
-	color: var(--text-primary);
-	text-align: left;
-	padding-left: 0.5rem;
-}
-
 .timeline-row__months {
 	display: flex;
 	justify-content: space-between;
@@ -44,6 +36,27 @@
 	display: flex;
 	position: relative;
 	overflow: visible;
+}
+
+.timeline-row__year-marker {
+	position: absolute;
+	top: 50%;
+	left: 0.2rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	z-index: 1;
+	transform: translateY(-50%);
+}
+
+.timeline-row__year-text {
+	color: var(--text-primary);
+	font-weight: 700;
+	font-size: 1rem;
+	transform: rotate(-90deg);
+	transform-origin: center;
+	white-space: nowrap;
 }
 
 .timeline-row__week {
