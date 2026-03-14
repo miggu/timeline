@@ -78,6 +78,17 @@
 	transform: translateY(1px);
 }
 
+.settings__button--danger {
+	color: var(--danger-color);
+	border-color: color-mix(in srgb, var(--danger-color) 22%, var(--border-color));
+}
+
+.settings__button--danger:hover,
+.settings__button--danger:focus-visible {
+	background: var(--danger-surface);
+	border-color: var(--danger-color);
+}
+
 .theme-switch {
 	border: 0;
 	background: transparent;

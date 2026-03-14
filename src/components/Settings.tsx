@@ -6,6 +6,7 @@ interface SettingsProps {
 	isDarkMode: boolean;
 	setIsDarkMode: (isDarkMode: boolean) => void;
 	onExportTimeline: () => void;
+	onDeleteAllData: () => void;
 }
 
 export function Settings({
@@ -14,6 +15,7 @@ export function Settings({
 	isDarkMode,
 	setIsDarkMode,
 	onExportTimeline,
+	onDeleteAllData,
 }: SettingsProps) {
 	return (
 		<div className="settings">
@@ -55,6 +57,13 @@ export function Settings({
 					onClick={onExportTimeline}
 				>
 					Download JSON
+				</button>
+				<button
+					className="settings__button settings__button--danger"
+					type="button"
+					onClick={onDeleteAllData}
+				>
+					Delete all data
 				</button>
 			</div>
 		</div>

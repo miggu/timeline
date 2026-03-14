@@ -191,3 +191,11 @@ export const setStoredEvents = (events: TimelineEvent[]) => {
 
 	window.localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
 };
+
+export const clearStoredTimelineData = () => {
+	if (typeof window === "undefined") {
+		return;
+	}
+
+	window.localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify([]));
+};

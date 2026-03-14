@@ -15,6 +15,7 @@ import { TimelineRow } from "./components/TimelineRow";
 import { EventBlockOverlay } from "./components/EventBlock";
 import { Settings } from "./components/Settings";
 import {
+	clearStoredTimelineData,
 	getStoredEvents,
 	getStoredThemeMode,
 	getStoredYearsToDisplay,
@@ -99,6 +100,7 @@ function App() {
 	const [suppressedEditEventId, setSuppressedEditEventId] = useState<string | null>(
 		null,
 	);
+	const [timelineResetKey, setTimelineResetKey] = useState(0);
 	const [recentlyDeletedEvent, setRecentlyDeletedEvent] =
 		useState<RecentlyDeletedEventState | null>(null);
 	const sensors = useSensors(
@@ -450,6 +452,21 @@ function App() {
 		}, 0);
 	};
 
+	const handleDeleteAllData = () => {
+		if (!window.confirm("Delete all timeline data from this browser?")) {
+			return;
+		}
+
+		clearStoredTimelineData();
+		clearActiveDrag();
+		clearActiveResize();
+		setEditingEventId(null);
+		setSuppressedEditEventId(null);
+		setRecentlyDeletedEvent(null);
+		setEvents([]);
+		setTimelineResetKey((currentKey) => currentKey + 1);
+	};
+
 	const handleUndoDelete = () => {
 		if (!recentlyDeletedEvent) {
 			return;
@@ -469,10 +486,12 @@ function App() {
 					setThemeMode(isDarkMode ? "dark" : "light")
 				}
 				onExportTimeline={handleExportTimeline}
+				onDeleteAllData={handleDeleteAllData}
 			/>
 			<h1 className="timeline__title">This is your life.</h1>
 
 			<DndContext
+				key={timelineResetKey}
 				collisionDetection={pointerWithin}
 				onDragStart={handleDragStart}
 				onDragEnd={handleDragEnd}
