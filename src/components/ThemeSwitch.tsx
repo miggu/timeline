@@ -1,16 +1,14 @@
-import React from "react";
-
 interface ThemeSwitchProps {
 	id: string;
 	checked: boolean;
 	onChange: (checked: boolean) => void;
 }
 
-export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({
+export function ThemeSwitch({
 	id,
 	checked,
 	onChange,
-}) => {
+}: ThemeSwitchProps) {
 	return (
 		<button
 			id={id}
@@ -26,4 +24,4 @@ export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({
 			</span>
 		</button>
 	);
-};
+}

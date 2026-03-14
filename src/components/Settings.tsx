@@ -1,4 +1,3 @@
-import React from "react";
 import { ThemeSwitch } from "./ThemeSwitch";
 
 interface SettingsProps {
@@ -8,12 +7,12 @@ interface SettingsProps {
 	setIsDarkMode: (isDarkMode: boolean) => void;
 }
 
-export const Settings: React.FC<SettingsProps> = ({
+export function Settings({
 	yearsToDisplay,
 	setYearsToDisplay,
 	isDarkMode,
 	setIsDarkMode,
-}) => {
+}: SettingsProps) {
 	return (
 		<div className="settings">
 			<div className="settings__header">
@@ -55,4 +54,4 @@ export const Settings: React.FC<SettingsProps> = ({
 			</div>
 		</div>
 	);
-};
+}

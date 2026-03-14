@@ -1,4 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import {
+	useEffect,
+	useRef,
+	useState,
+	type CSSProperties,
+	type KeyboardEvent,
+	type MouseEvent,
+	type PointerEvent,
+} from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { ResizeEdge } from "../types";
 import { getEventLaneTop, getEventPaletteColor } from "../timeline";
@@ -42,12 +50,12 @@ interface EventBlockOverlayProps {
 	label: string;
 }
 
-type EventBlockStyle = React.CSSProperties & {
+type EventBlockStyle = CSSProperties & {
 	"--event-color"?: string;
 	"--event-glow"?: string;
 };
 
-export const EventBlock: React.FC<EventBlockProps> = ({
+export function EventBlock({
 	id,
 	leftPercent,
 	widthPercent,
@@ -60,7 +68,7 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 	onCommitLabel,
 	onResizeStart,
 	onStartEditing,
-}) => {
+}: EventBlockProps) {
 	const inputRef = useRef<HTMLInputElement | null>(null);
 	const skipBlurCommitRef = useRef(false);
 	const [draftLabel, setDraftLabel] = useState(label);
@@ -84,7 +92,7 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 	}, [isEditing]);
 
 	const handleResizePointerDown =
-		(edge: ResizeEdge) => (event: React.PointerEvent<HTMLDivElement>) => {
+		(edge: ResizeEdge) => (event: PointerEvent<HTMLDivElement>) => {
 			event.preventDefault();
 			event.stopPropagation();
 
@@ -102,7 +110,7 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 			);
 		};
 
-	const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+	const handleClick = (event: MouseEvent<HTMLDivElement>) => {
 		if (isDragging || isEditing || isResizeActive) {
 			return;
 		}
@@ -126,7 +134,7 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 		onCommitLabel(id, draftLabel);
 	};
 
-	const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+	const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
 		if (event.key === "Enter") {
 			event.preventDefault();
 			commitLabel();
@@ -203,14 +211,14 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 			</div>
 		</div>
 	);
-};
+}
 
-export const EventBlockOverlay: React.FC<EventBlockOverlayProps> = ({
+export function EventBlockOverlay({
 	width,
 	height,
 	colorIndex,
 	label,
-}) => {
+}: EventBlockOverlayProps) {
 	const paletteColor = getEventPaletteColor(colorIndex);
 	const style: EventBlockStyle = {
 		width,
@@ -236,4 +244,4 @@ export const EventBlockOverlay: React.FC<EventBlockOverlayProps> = ({
 			</div>
 		</div>
 	);
-};
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	DndContext,
 	DragOverlay,
@@ -61,7 +61,7 @@ const getDropTarget = (id: string) => {
 	};
 };
 
-const App: React.FC = () => {
+function App() {
 	const currentYear = 2026;
 	const [yearsToDisplay, setYearsToDisplay] = useState<number>(
 		getStoredYearsToDisplay,
@@ -427,6 +427,6 @@ const App: React.FC = () => {
 			</div>
 		</div>
 	);
-};
+}
 
 export default App;
