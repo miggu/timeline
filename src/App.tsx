@@ -2,15 +2,27 @@ import React, { useEffect, useState } from "react";
 import {
 	DndContext,
 	DragOverlay,
+	KeyboardSensor,
+	PointerSensor,
 	pointerWithin,
 	type DragEndEvent,
 	type DragStartEvent,
 	type Modifier,
+	useSensor,
+	useSensors,
 } from "@dnd-kit/core";
 import { TimelineRow } from "./components/TimelineRow";
 import { EventBlockOverlay } from "./components/EventBlock";
 import { Settings } from "./components/Settings";
-import type { ResizeEdge, TimelineEvent } from "./types";
+import {
+	getStoredEvents,
+	getStoredThemeMode,
+	getStoredYearsToDisplay,
+	setStoredEvents,
+	setStoredThemeMode,
+	setStoredYearsToDisplay,
+} from "./local-storage";
+import type { ResizeEdge, ThemeMode, TimelineEvent } from "./types";
 import {
 	EVENT_BLOCK_TOP,
 	LOG_EVENT_WIDTH_PERCENT,
@@ -18,8 +30,6 @@ import {
 	moveTimelineEventToWeek,
 	resizeTimelineEvent,
 } from "./timeline";
-
-type ThemeMode = "light" | "dark";
 
 interface ActiveDragState {
 	id: string;
@@ -54,28 +64,12 @@ const snapDragToRow: Modifier = ({ transform, activeNodeRect, over }) => {
 	};
 };
 
-const THEME_STORAGE_KEY = "timeline-theme";
-
-const getInitialThemeMode = (): ThemeMode => {
-	if (typeof window === "undefined") {
-		return "light";
-	}
-
-	const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-
-	if (storedTheme === "light" || storedTheme === "dark") {
-		return storedTheme;
-	}
-
-	return window.matchMedia("(prefers-color-scheme: dark)").matches
-		? "dark"
-		: "light";
-};
-
 const App: React.FC = () => {
 	const currentYear = 2026;
-	const [yearsToDisplay, setYearsToDisplay] = useState<number>(3); // Default to 3 years
-	const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
+	const [yearsToDisplay, setYearsToDisplay] = useState<number>(
+		getStoredYearsToDisplay,
+	);
+	const [themeMode, setThemeMode] = useState<ThemeMode>(getStoredThemeMode);
 
 	// Calculate the array of years to map over
 	const years = Array.from(
@@ -83,14 +77,19 @@ const App: React.FC = () => {
 		(_, i) => currentYear - (yearsToDisplay - 1) + i,
 	);
 
-	const [events, setEvents] = useState<TimelineEvent[]>([
-		{ id: "e1", year: 2024, leftPercent: 10, widthPercent: 15, colorIndex: 0 },
-		{ id: "e2", year: 2025, leftPercent: 75, widthPercent: 12, colorIndex: 1 },
-		{ id: "e3", year: 2019, leftPercent: 30, widthPercent: 8, colorIndex: 2 },
-	]);
+	const [events, setEvents] = useState<TimelineEvent[]>(getStoredEvents);
 	const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
 	const [activeResize, setActiveResize] = useState<ActiveResizeState | null>(
 		null,
+	);
+	const [editingEventId, setEditingEventId] = useState<string | null>(null);
+	const sensors = useSensors(
+		useSensor(PointerSensor, {
+			activationConstraint: {
+				distance: 6,
+			},
+		}),
+		useSensor(KeyboardSensor),
 	);
 
 	const activeEvent = activeDrag
@@ -123,6 +122,7 @@ const App: React.FC = () => {
 			width: measuredWidth,
 			height: measuredHeight,
 		});
+		setEditingEventId(null);
 	};
 
 	const clearActiveDrag = () => {
@@ -131,6 +131,23 @@ const App: React.FC = () => {
 
 	const clearActiveResize = () => {
 		setActiveResize(null);
+	};
+
+	const handleStartEditing = (id: string) => {
+		clearActiveDrag();
+		clearActiveResize();
+		setEditingEventId(id);
+	};
+
+	const handleCancelEditing = (id: string) => {
+		setEditingEventId((editingId) => (editingId === id ? null : editingId));
+	};
+
+	const handleCommitLabel = (id: string, label: string) => {
+		setEvents((prev) =>
+			prev.map((event) => (event.id === id ? { ...event, label } : event)),
+		);
+		setEditingEventId((editingId) => (editingId === id ? null : editingId));
 	};
 
 	const handleResizeStart = (
@@ -146,6 +163,7 @@ const App: React.FC = () => {
 		}
 
 		clearActiveDrag();
+		setEditingEventId(null);
 		setActiveResize({
 			id,
 			edge,
@@ -159,8 +177,16 @@ const App: React.FC = () => {
 	useEffect(() => {
 		document.documentElement.dataset.theme = themeMode;
 		document.documentElement.style.colorScheme = themeMode;
-		window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+		setStoredThemeMode(themeMode);
 	}, [themeMode]);
+
+	useEffect(() => {
+		setStoredYearsToDisplay(yearsToDisplay);
+	}, [yearsToDisplay]);
+
+	useEffect(() => {
+		setStoredEvents(events);
+	}, [events]);
 
 	useEffect(() => {
 		if (!activeResize) {
@@ -257,6 +283,7 @@ const App: React.FC = () => {
 					leftPercent: placement.leftPercent,
 					widthPercent: LOG_EVENT_WIDTH_PERCENT,
 					colorIndex: prev.length,
+					label: "",
 				},
 			];
 		});
@@ -285,6 +312,7 @@ const App: React.FC = () => {
 				onDragStart={handleDragStart}
 				onDragEnd={handleDragEnd}
 				onDragCancel={clearActiveDrag}
+				sensors={sensors}
 			>
 				<div className="timeline__rows">
 					{years.map((year) => (
@@ -293,7 +321,11 @@ const App: React.FC = () => {
 							year={year}
 							events={events.filter((e) => e.year === year)}
 							activeResizeId={activeResize?.id ?? null}
+							editingEventId={editingEventId}
+							onCancelEditing={handleCancelEditing}
+							onCommitLabel={handleCommitLabel}
 							onResizeStart={handleResizeStart}
+							onStartEditing={handleStartEditing}
 						/>
 					))}
 				</div>
@@ -307,6 +339,7 @@ const App: React.FC = () => {
 							width={activeDrag.width}
 							height={activeDrag.height}
 							colorIndex={activeEvent.colorIndex}
+							label={activeEvent.label}
 						/>
 					) : null}
 				</DragOverlay>

@@ -24,19 +24,27 @@ interface TimelineRowProps {
 	year: number;
 	events?: TimelineEvent[];
 	activeResizeId: string | null;
+	editingEventId: string | null;
+	onCancelEditing: (id: string) => void;
+	onCommitLabel: (id: string, label: string) => void;
 	onResizeStart: (
 		id: string,
 		edge: ResizeEdge,
 		clientX: number,
 		trackWidth: number,
 	) => void;
+	onStartEditing: (id: string) => void;
 }
 
 export const TimelineRow: React.FC<TimelineRowProps> = ({
 	year,
 	events = [],
 	activeResizeId,
+	editingEventId,
+	onCancelEditing,
+	onCommitLabel,
 	onResizeStart,
+	onStartEditing,
 }) => {
 	return (
 		<div className="timeline-row" id={`row-${year}`}>
@@ -66,8 +74,12 @@ export const TimelineRow: React.FC<TimelineRowProps> = ({
 					<EventBlock
 						key={event.id}
 						{...event}
+						isEditing={editingEventId === event.id}
 						isResizeActive={activeResizeId === event.id}
+						onCancelEditing={onCancelEditing}
+						onCommitLabel={onCommitLabel}
 						onResizeStart={onResizeStart}
+						onStartEditing={onStartEditing}
 					/>
 				))}
 			</div>

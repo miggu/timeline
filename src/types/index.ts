@@ -4,6 +4,8 @@ export interface TimelineEvent {
 	leftPercent: number;
 	widthPercent: number;
 	colorIndex: number;
+	label: string;
 }
 
 export type ResizeEdge = "start" | "end";
+export type ThemeMode = "light" | "dark";

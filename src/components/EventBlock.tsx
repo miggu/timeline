@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { ResizeEdge } from "../types";
 import { getEventPaletteColor } from "../timeline";
@@ -20,19 +20,25 @@ interface EventBlockProps {
 	leftPercent: number;
 	widthPercent: number;
 	colorIndex: number;
+	label: string;
+	isEditing: boolean;
 	isResizeActive: boolean;
+	onCancelEditing: (id: string) => void;
+	onCommitLabel: (id: string, label: string) => void;
 	onResizeStart: (
 		id: string,
 		edge: ResizeEdge,
 		clientX: number,
 		trackWidth: number,
 	) => void;
+	onStartEditing: (id: string) => void;
 }
 
 interface EventBlockOverlayProps {
 	width: number;
 	height: number;
 	colorIndex: number;
+	label: string;
 }
 
 type EventBlockStyle = React.CSSProperties & {
@@ -40,30 +46,40 @@ type EventBlockStyle = React.CSSProperties & {
 	"--event-glow"?: string;
 };
 
-const EventBlockChrome = () => (
-	<>
-		<div className="timeline-event__handle timeline-event__handle--start">
-			<ChevronLeft />
-		</div>
-		<div className="timeline-event__handle timeline-event__handle--end">
-			<ChevronRight />
-		</div>
-	</>
-);
-
 export const EventBlock: React.FC<EventBlockProps> = ({
 	id,
 	leftPercent,
 	widthPercent,
 	colorIndex,
+	label,
+	isEditing,
 	isResizeActive,
+	onCancelEditing,
+	onCommitLabel,
 	onResizeStart,
+	onStartEditing,
 }) => {
+	const inputRef = useRef<HTMLInputElement | null>(null);
+	const skipBlurCommitRef = useRef(false);
+	const [draftLabel, setDraftLabel] = useState(label);
 	const { attributes, listeners, setNodeRef, transform, isDragging } =
 		useDraggable({
 			id: id,
-			disabled: isResizeActive,
+			disabled: isResizeActive || isEditing,
 		});
+
+	useEffect(() => {
+		setDraftLabel(label);
+	}, [label]);
+
+	useEffect(() => {
+		if (!isEditing) {
+			return;
+		}
+
+		inputRef.current?.focus();
+		inputRef.current?.select();
+	}, [isEditing]);
 
 	const handleResizePointerDown =
 		(edge: ResizeEdge) => (event: React.PointerEvent<HTMLDivElement>) => {
@@ -84,6 +100,47 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 			);
 		};
 
+	const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+		if (isDragging || isEditing || isResizeActive) {
+			return;
+		}
+
+		if (
+			event.target instanceof Element &&
+			event.target.closest(".timeline-event__handle")
+		) {
+			return;
+		}
+
+		onStartEditing(id);
+	};
+
+	const commitLabel = () => {
+		if (skipBlurCommitRef.current) {
+			skipBlurCommitRef.current = false;
+			return;
+		}
+
+		onCommitLabel(id, draftLabel);
+	};
+
+	const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			commitLabel();
+			return;
+		}
+
+		if (event.key !== "Escape") {
+			return;
+		}
+
+		event.preventDefault();
+		skipBlurCommitRef.current = true;
+		setDraftLabel(label);
+		onCancelEditing(id);
+	};
+
 	const paletteColor = getEventPaletteColor(colorIndex);
 
 	const style: EventBlockStyle = {
@@ -102,8 +159,11 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 	return (
 		<div
 			ref={setNodeRef}
-			className={`timeline-event${isResizeActive ? " timeline-event--resizing" : ""}`}
+			className={`timeline-event${
+				isEditing ? " timeline-event--editing" : ""
+			}${isResizeActive ? " timeline-event--resizing" : ""}`}
 			style={style}
+			onClick={handleClick}
 			{...listeners}
 			{...attributes}
 		>
@@ -112,6 +172,25 @@ export const EventBlock: React.FC<EventBlockProps> = ({
 				onPointerDown={handleResizePointerDown("start")}
 			>
 				<ChevronLeft />
+			</div>
+			<div className="timeline-event__content">
+				{isEditing ? (
+					<input
+						ref={inputRef}
+						className="timeline-event__input"
+						type="text"
+						value={draftLabel}
+						onBlur={commitLabel}
+						onChange={({ target }) => setDraftLabel(target.value)}
+						onClick={(event) => event.stopPropagation()}
+						onKeyDown={handleInputKeyDown}
+						placeholder="Add text"
+					/>
+				) : label ? (
+					<span className="timeline-event__label">{label}</span>
+				) : (
+					<span className="timeline-event__placeholder">Add text</span>
+				)}
 			</div>
 			<div
 				className="timeline-event__handle timeline-event__handle--end"
@@ -127,6 +206,7 @@ export const EventBlockOverlay: React.FC<EventBlockOverlayProps> = ({
 	width,
 	height,
 	colorIndex,
+	label,
 }) => {
 	const paletteColor = getEventPaletteColor(colorIndex);
 	const style: EventBlockStyle = {
@@ -138,7 +218,19 @@ export const EventBlockOverlay: React.FC<EventBlockOverlayProps> = ({
 
 	return (
 		<div className="timeline-event timeline-event--overlay" style={style}>
-			<EventBlockChrome />
+			<div className="timeline-event__handle timeline-event__handle--start">
+				<ChevronLeft />
+			</div>
+			<div className="timeline-event__content">
+				{label ? (
+					<span className="timeline-event__label">{label}</span>
+				) : (
+					<span className="timeline-event__placeholder">Add text</span>
+				)}
+			</div>
+			<div className="timeline-event__handle timeline-event__handle--end">
+				<ChevronRight />
+			</div>
 		</div>
 	);
 };
