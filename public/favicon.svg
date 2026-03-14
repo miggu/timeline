@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Timeline">
+  <rect width="64" height="64" rx="18" fill="#0f172a" />
+  <rect x="11" y="11" width="28" height="8" rx="4" fill="#5679A6" />
+  <rect x="21" y="22" width="31" height="8" rx="4" fill="#6394BF" />
+  <rect x="9" y="33" width="37" height="8" rx="4" fill="#62733F" />
+  <rect x="18" y="44" width="27" height="8" rx="4" fill="#D99B29" />
+  <circle cx="50" cy="48" r="4" fill="#A6771F" />
+</svg>
