@@ -132,6 +132,18 @@
 	border-color: var(--danger-color);
 }
 
+.settings__button--danger-confirming {
+	background: var(--danger-color);
+	border-color: var(--danger-color);
+	color: #fff;
+}
+
+.settings__button--danger-confirming:hover,
+.settings__button--danger-confirming:focus-visible {
+	background: color-mix(in srgb, var(--danger-color) 88%, black);
+	border-color: color-mix(in srgb, var(--danger-color) 88%, black);
+}
+
 .theme-switch {
 	border: 0;
 	background: transparent;

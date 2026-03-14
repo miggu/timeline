@@ -41,6 +41,7 @@ export function Settings({
 	onDeleteAllData,
 }: SettingsProps) {
 	const [isOpen, setIsOpen] = useState(false);
+	const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
@@ -72,6 +73,25 @@ export function Settings({
 			window.removeEventListener("keydown", handleKeyDown);
 		};
 	}, [isOpen]);
+
+	useEffect(() => {
+		if (isOpen) {
+			return;
+		}
+
+		setIsDeleteConfirming(false);
+	}, [isOpen]);
+
+	const handleDeleteButtonClick = () => {
+		if (!isDeleteConfirming) {
+			setIsDeleteConfirming(true);
+			return;
+		}
+
+		onDeleteAllData();
+		setIsDeleteConfirming(false);
+		setIsOpen(false);
+	};
 
 	return (
 		<div
@@ -114,11 +134,15 @@ export function Settings({
 							Download JSON
 						</button>
 						<button
-							className="settings__button settings__button--danger"
+							className={`settings__button settings__button--danger${
+								isDeleteConfirming
+									? " settings__button--danger-confirming"
+									: ""
+							}`}
 							type="button"
-							onClick={onDeleteAllData}
+							onClick={handleDeleteButtonClick}
 						>
-							Delete all data
+							{isDeleteConfirming ? "I am sure" : "Delete all data"}
 						</button>
 					</div>
 				</div>

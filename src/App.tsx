@@ -79,6 +79,38 @@ const getNextEventId = (events: TimelineEvent[]) => {
   return `e${highestNumericId + 1}`;
 };
 
+const getCreatedEvent = (
+  events: TimelineEvent[],
+  year: number,
+  weekNumber: number,
+) => {
+  const beginDay = getDayForWeek(year, weekNumber);
+  const dayCount = getDaysInYear(year);
+  const safeBeginDay = Math.min(
+    beginDay,
+    dayCount - LOG_EVENT_DURATION_DAYS + 1,
+  );
+  const endDay = Math.min(
+    safeBeginDay + LOG_EVENT_DURATION_DAYS - 1,
+    dayCount,
+  );
+  const lane = findAvailableLane(events, year, safeBeginDay, endDay);
+
+  if (lane === null) {
+    return null;
+  }
+
+  return {
+    id: getNextEventId(events),
+    year,
+    beginDay: safeBeginDay,
+    endDay,
+    colorIndex: events.length,
+    label: "",
+    lane,
+  };
+};
+
 const getDropTarget = (id: string) => {
   const match = id.match(/week-(\d+)-(\d+)/);
 
@@ -194,6 +226,7 @@ function App() {
   const [recentlyDeletedEvent, setRecentlyDeletedEvent] =
     useState<RecentlyDeletedEventState | null>(null);
   const oldestRowRef = useRef<HTMLDivElement | null>(null);
+  const pendingCreatedEventIdRef = useRef<string | null>(null);
   const pendingOlderYearLoadRef = useRef(false);
   const previousScrollHeightRef = useRef(0);
   const lastScrollYRef = useRef(0);
@@ -393,6 +426,28 @@ function App() {
   }, [events]);
 
   useEffect(() => {
+    const pendingCreatedEventId = pendingCreatedEventIdRef.current;
+
+    if (!pendingCreatedEventId) {
+      return;
+    }
+
+    const hasCreatedEvent = events.some(
+      (timelineEvent) => timelineEvent.id === pendingCreatedEventId,
+    );
+
+    if (!hasCreatedEvent) {
+      return;
+    }
+
+    clearActiveDrag();
+    clearActiveResize();
+    setSuppressedEditEventId(null);
+    setEditingEventId(pendingCreatedEventId);
+    pendingCreatedEventIdRef.current = null;
+  }, [events]);
+
+  useEffect(() => {
     lastScrollYRef.current = window.scrollY;
 
     const handleScroll = () => {
@@ -573,34 +628,16 @@ function App() {
 
   const handleCreateEvent = (year: number, weekNumber: number) => {
     setEvents((prev) => {
-      const beginDay = getDayForWeek(year, weekNumber);
-      const dayCount = getDaysInYear(year);
-      const safeBeginDay = Math.min(
-        beginDay,
-        dayCount - LOG_EVENT_DURATION_DAYS + 1,
-      );
-      const endDay = Math.min(
-        safeBeginDay + LOG_EVENT_DURATION_DAYS - 1,
-        dayCount,
-      );
-      const lane = findAvailableLane(prev, year, safeBeginDay, endDay);
+      const createdEvent = getCreatedEvent(prev, year, weekNumber);
 
-      if (lane === null) {
+      if (!createdEvent) {
+        pendingCreatedEventIdRef.current = null;
         return prev;
       }
 
-      return [
-        ...prev,
-        {
-          id: getNextEventId(prev),
-          year,
-          beginDay: safeBeginDay,
-          endDay,
-          colorIndex: prev.length,
-          label: "",
-          lane,
-        },
-      ];
+      pendingCreatedEventIdRef.current = createdEvent.id;
+
+      return [...prev, createdEvent];
     });
   };
 
@@ -633,13 +670,10 @@ function App() {
   };
 
   const handleDeleteAllData = () => {
-    if (!window.confirm("Delete all timeline data from this browser?")) {
-      return;
-    }
-
     clearStoredTimelineData();
     clearActiveDrag();
     clearActiveResize();
+    pendingCreatedEventIdRef.current = null;
     setEditingEventId(null);
     setSuppressedEditEventId(null);
     setRecentlyDeletedEvent(null);
