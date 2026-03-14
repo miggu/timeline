@@ -34,22 +34,6 @@
 	color: var(--text-secondary);
 }
 
-.settings__select {
-	padding: 0.5rem;
-	border: 1px solid var(--border-color);
-	border-radius: 6px;
-	background: var(--surface-bg);
-	color: var(--text-primary);
-	font-family: inherit;
-	font-size: 0.85rem;
-	cursor: pointer;
-	outline: none;
-}
-
-.settings__select:focus {
-	border-color: var(--accent-color);
-}
-
 .settings__button {
 	border: 1px solid var(--border-color);
 	border-radius: 8px;

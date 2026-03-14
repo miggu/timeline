@@ -20,10 +20,8 @@ import {
 	clearStoredTimelineData,
 	getStoredEvents,
 	getStoredThemeMode,
-	getStoredYearsToDisplay,
 	setStoredEvents,
 	setStoredThemeMode,
-	setStoredYearsToDisplay,
 } from "./local-storage";
 import type {
 	ResizeEdge,
@@ -65,6 +63,7 @@ interface RecentlyDeletedEventState {
 
 const DRAG_ACTIVATION_DISTANCE = 8;
 const DRAG_CLICK_SUPPRESSION_MS = 120;
+const YEARS_TO_DISPLAY = 9;
 
 const getDropTarget = (id: string) => {
 	const match = id.match(/week-(\d+)-(\d+)/);
@@ -81,15 +80,12 @@ const getDropTarget = (id: string) => {
 
 function App() {
 	const currentYear = 2026;
-	const [yearsToDisplay, setYearsToDisplay] = useState<number>(
-		getStoredYearsToDisplay,
-	);
 	const [themeMode, setThemeMode] = useState<ThemeMode>(getStoredThemeMode);
 
 	// Calculate the array of years to map over
 	const years = Array.from(
-		{ length: yearsToDisplay },
-		(_, i) => currentYear - (yearsToDisplay - 1) + i,
+		{ length: YEARS_TO_DISPLAY },
+		(_, i) => currentYear - (YEARS_TO_DISPLAY - 1) + i,
 	);
 
 	const [events, setEvents] = useState<TimelineEvent[]>(getStoredEvents);
@@ -295,10 +291,6 @@ function App() {
 	}, [themeMode]);
 
 	useEffect(() => {
-		setStoredYearsToDisplay(yearsToDisplay);
-	}, [yearsToDisplay]);
-
-	useEffect(() => {
 		setStoredEvents(events);
 	}, [events]);
 
@@ -445,7 +437,7 @@ function App() {
 			version: 1,
 			exportedAt: new Date().toISOString(),
 			currentYear,
-			yearsToDisplay,
+			yearsToDisplay: YEARS_TO_DISPLAY,
 			themeMode,
 			events: [...events].sort(
 				(left, right) =>
@@ -499,8 +491,6 @@ function App() {
 	return (
 		<div className="timeline">
 			<Settings
-				yearsToDisplay={yearsToDisplay}
-				setYearsToDisplay={setYearsToDisplay}
 				isDarkMode={themeMode === "dark"}
 				setIsDarkMode={(isDarkMode) =>
 					setThemeMode(isDarkMode ? "dark" : "light")

@@ -3,11 +3,6 @@ import type { ThemeMode, TimelineEvent } from "./types";
 
 const THEME_STORAGE_KEY = "timeline-theme";
 const EVENTS_STORAGE_KEY = "timeline-events";
-const YEARS_STORAGE_KEY = "timeline-years-to-display";
-
-const YEAR_OPTIONS = new Set([1, 3, 5, 9]);
-
-export const DEFAULT_YEARS_TO_DISPLAY = 3;
 
 export const DEFAULT_EVENTS: TimelineEvent[] = [
 	{
@@ -158,27 +153,6 @@ export const setStoredThemeMode = (themeMode: ThemeMode) => {
 	}
 
 	window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
-};
-
-export const getStoredYearsToDisplay = () => {
-	const storedValue = readStoredJson(YEARS_STORAGE_KEY);
-
-	if (typeof storedValue === "number" && YEAR_OPTIONS.has(storedValue)) {
-		return storedValue;
-	}
-
-	return DEFAULT_YEARS_TO_DISPLAY;
-};
-
-export const setStoredYearsToDisplay = (yearsToDisplay: number) => {
-	if (typeof window === "undefined") {
-		return;
-	}
-
-	window.localStorage.setItem(
-		YEARS_STORAGE_KEY,
-		JSON.stringify(yearsToDisplay),
-	);
 };
 
 export const getStoredEvents = () => {
