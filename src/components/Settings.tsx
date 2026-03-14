@@ -78,16 +78,18 @@ export function Settings({
 			ref={containerRef}
 			className={`settings${isOpen ? " settings--open" : ""}`}
 		>
-			<button
-				className="settings__trigger"
-				type="button"
-				aria-expanded={isOpen}
-				aria-controls="settings-panel"
-				aria-label="Open settings"
-				onClick={() => setIsOpen((open) => !open)}
-			>
-				<SettingsIcon />
-			</button>
+			{!isOpen ? (
+				<button
+					className="settings__trigger"
+					type="button"
+					aria-expanded="false"
+					aria-controls="settings-panel"
+					aria-label="Open settings"
+					onClick={() => setIsOpen(true)}
+				>
+					<SettingsIcon />
+				</button>
+			) : null}
 			{isOpen ? (
 				<div className="settings__panel" id="settings-panel">
 					<div className="settings__group">
