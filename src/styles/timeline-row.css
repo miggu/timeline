@@ -19,6 +19,19 @@
 	white-space: nowrap;
 }
 
+.timeline-row__now {
+	position: absolute;
+	bottom: -0.15rem;
+	width: 0.96rem;
+	height: 0.96rem;
+	border-radius: 50%;
+	background: #f5c7d7;
+	box-shadow: 0 6px 16px -8px rgba(245, 199, 215, 0.9);
+	transform: translate(-50%, 50%);
+	pointer-events: none;
+	z-index: 2;
+}
+
 .timeline-row__month::after {
 	content: "";
 	position: absolute;

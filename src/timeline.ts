@@ -102,6 +102,12 @@ export const getMonthStartPercent = (year: number, monthIndex: number) =>
 				getTrackTimelinePercent(),
 	);
 
+export const getDayPositionPercent = (year: number, day: number) =>
+	roundPercent(
+		getTrackPlaceholderPercent() +
+			getDayOffset(year, day) * getTrackTimelinePercent(),
+	);
+
 const clampEventRange = (
 	year: number,
 	beginDay: number,

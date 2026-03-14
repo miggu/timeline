@@ -30,6 +30,7 @@ import type {
 import {
   LOG_EVENT_DURATION_DAYS,
   findAvailableLane,
+  getDayOfYear,
   getDayForWeek,
   getDaysInYear,
   getEventDurationDays,
@@ -164,7 +165,9 @@ const getAnchorOffsetDays = (
 };
 
 function App() {
-  const currentYear = 2026;
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentDayOfYear = getDayOfYear(today);
   const initialOldestYear = currentYear - INITIAL_YEARS_TO_DISPLAY + 1;
   const [events, setEvents] = useState<TimelineEvent[]>(getStoredEvents);
   const [themeMode, setThemeMode] = useState<ThemeMode>(getStoredThemeMode);
@@ -687,6 +690,7 @@ function App() {
               year={year}
               events={events.filter((e) => e.year === year)}
               previewEvent={dragPreview?.year === year ? dragPreview : null}
+              nowDay={year === currentYear ? currentDayOfYear : null}
               activeResizeId={activeResize?.id ?? null}
               editingEventId={editingEventId}
               suppressedEditEventId={suppressedEditEventId}

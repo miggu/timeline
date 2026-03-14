@@ -2,7 +2,7 @@ import type { Ref } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { EventBlock, EventBlockPreview } from "./EventBlock";
 import type { ResizeEdge, TimelineEvent } from "../types";
-import { getMonthStartPercent } from "../timeline";
+import { getDayPositionPercent, getMonthStartPercent } from "../timeline";
 
 const MONTH_LABELS = [
 	"Jan",
@@ -56,6 +56,7 @@ interface TimelineRowProps {
 	year: number;
 	events?: TimelineEvent[];
 	previewEvent: TimelineEvent | null;
+	nowDay: number | null;
 	activeResizeId: string | null;
 	editingEventId: string | null;
 	suppressedEditEventId: string | null;
@@ -77,6 +78,7 @@ export function TimelineRow({
 	year,
 	events = [],
 	previewEvent,
+	nowDay,
 	activeResizeId,
 	editingEventId,
 	suppressedEditEventId,
@@ -96,6 +98,13 @@ export function TimelineRow({
 	return (
 		<div ref={rowRef} className="timeline-row" id={`row-${year}`}>
 			<div className="timeline-row__months">
+				{nowDay ? (
+					<span
+						className="timeline-row__now"
+						style={{ left: `${getDayPositionPercent(year, nowDay)}%` }}
+						aria-hidden="true"
+					/>
+				) : null}
 				{MONTH_LABELS.map((monthLabel, monthIndex) => (
 					<span
 						key={monthLabel}
