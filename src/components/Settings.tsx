@@ -1,5 +1,15 @@
 import { ThemeSwitch } from "./ThemeSwitch";
 
+const ThemeIcon = () => (
+	<svg
+		viewBox="0 0 24 24"
+		className="settings__icon"
+		aria-hidden="true"
+	>
+		<path d="M19 15.5A7.5 7.5 0 0 1 8.5 5 8 8 0 1 0 19 15.5Z" />
+	</svg>
+);
+
 interface SettingsProps {
 	isDarkMode: boolean;
 	setIsDarkMode: (isDarkMode: boolean) => void;
@@ -17,9 +27,9 @@ export function Settings({
 		<div className="settings">
 			<div className="settings__group">
 				<div className="settings__toggle-row">
-					<label className="settings__label" htmlFor="dark-mode-switch">
-						Dark mode
-					</label>
+					<span className="settings__icon-label">
+						<ThemeIcon />
+					</span>
 					<ThemeSwitch
 						id="dark-mode-switch"
 						checked={isDarkMode}
@@ -29,7 +39,6 @@ export function Settings({
 			</div>
 
 			<div className="settings__group">
-				<span className="settings__label">Export</span>
 				<button
 					className="settings__button"
 					type="button"
