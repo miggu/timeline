@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
 	DndContext,
 	DragOverlay,
@@ -63,7 +63,7 @@ interface RecentlyDeletedEventState {
 
 const DRAG_ACTIVATION_DISTANCE = 8;
 const DRAG_CLICK_SUPPRESSION_MS = 120;
-const YEARS_TO_DISPLAY = 9;
+const INITIAL_YEARS_TO_DISPLAY = 9;
 
 const getNextEventId = (events: TimelineEvent[]) => {
 	const highestNumericId = events.reduce((highestId, event) => {
@@ -94,12 +94,14 @@ const getDropTarget = (id: string) => {
 
 function App() {
 	const currentYear = 2026;
+	const initialOldestYear = currentYear - INITIAL_YEARS_TO_DISPLAY + 1;
 	const [themeMode, setThemeMode] = useState<ThemeMode>(getStoredThemeMode);
+	const [oldestYear, setOldestYear] = useState(initialOldestYear);
 
 	// Calculate the array of years to map over
 	const years = Array.from(
-		{ length: YEARS_TO_DISPLAY },
-		(_, i) => currentYear - (YEARS_TO_DISPLAY - 1) + i,
+		{ length: currentYear - oldestYear + 1 },
+		(_, i) => oldestYear + i,
 	);
 
 	const [events, setEvents] = useState<TimelineEvent[]>(getStoredEvents);
@@ -115,6 +117,9 @@ function App() {
 	const [timelineResetKey, setTimelineResetKey] = useState(0);
 	const [recentlyDeletedEvent, setRecentlyDeletedEvent] =
 		useState<RecentlyDeletedEventState | null>(null);
+	const oldestRowRef = useRef<HTMLDivElement | null>(null);
+	const pendingOlderYearLoadRef = useRef(false);
+	const previousScrollHeightRef = useRef(0);
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
@@ -313,6 +318,55 @@ function App() {
 	}, [events]);
 
 	useEffect(() => {
+		const target = oldestRowRef.current;
+
+		if (!target) {
+			return;
+		}
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (!entry?.isIntersecting) {
+					return;
+				}
+
+				if (pendingOlderYearLoadRef.current || window.scrollY > 80) {
+					return;
+				}
+
+				pendingOlderYearLoadRef.current = true;
+				previousScrollHeightRef.current =
+					document.documentElement.scrollHeight;
+				setOldestYear((currentOldestYear) => currentOldestYear - 1);
+			},
+			{
+				threshold: 0.6,
+			},
+		);
+
+		observer.observe(target);
+
+		return () => {
+			observer.disconnect();
+		};
+	}, [oldestYear]);
+
+	useLayoutEffect(() => {
+		if (!pendingOlderYearLoadRef.current) {
+			return;
+		}
+
+		const nextScrollHeight = document.documentElement.scrollHeight;
+		const scrollDelta = nextScrollHeight - previousScrollHeightRef.current;
+
+		if (scrollDelta > 0) {
+			window.scrollBy(0, scrollDelta);
+		}
+
+		pendingOlderYearLoadRef.current = false;
+	}, [oldestYear]);
+
+	useEffect(() => {
 		if (!recentlyDeletedEvent) {
 			return;
 		}
@@ -465,7 +519,7 @@ function App() {
 			version: 1,
 			exportedAt: new Date().toISOString(),
 			currentYear,
-			yearsToDisplay: YEARS_TO_DISPLAY,
+			yearsToDisplay: years.length,
 			themeMode,
 			events: [...events].sort(
 				(left, right) =>
@@ -503,6 +557,7 @@ function App() {
 		setEditingEventId(null);
 		setSuppressedEditEventId(null);
 		setRecentlyDeletedEvent(null);
+		setOldestYear(initialOldestYear);
 		setEvents([]);
 		setTimelineResetKey((currentKey) => currentKey + 1);
 	};
@@ -553,6 +608,7 @@ function App() {
 							activeResizeId={activeResize?.id ?? null}
 							editingEventId={editingEventId}
 							suppressedEditEventId={suppressedEditEventId}
+							rowRef={year === oldestYear ? oldestRowRef : undefined}
 							onCreateEvent={handleCreateEvent}
 							onCancelEditing={handleCancelEditing}
 							onCommitLabel={handleCommitLabel}

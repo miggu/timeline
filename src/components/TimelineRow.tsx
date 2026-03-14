@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { EventBlock, EventBlockPreview } from "./EventBlock";
 import type { ResizeEdge, TimelineEvent } from "../types";
@@ -58,6 +59,7 @@ interface TimelineRowProps {
 	activeResizeId: string | null;
 	editingEventId: string | null;
 	suppressedEditEventId: string | null;
+	rowRef?: Ref<HTMLDivElement>;
 	onCreateEvent: (year: number, weekNumber: number) => void;
 	onCancelEditing: (id: string) => void;
 	onCommitLabel: (id: string, label: string) => void;
@@ -78,6 +80,7 @@ export function TimelineRow({
 	activeResizeId,
 	editingEventId,
 	suppressedEditEventId,
+	rowRef,
 	onCreateEvent,
 	onCancelEditing,
 	onCommitLabel,
@@ -91,7 +94,7 @@ export function TimelineRow({
 	);
 
 	return (
-		<div className="timeline-row" id={`row-${year}`}>
+		<div ref={rowRef} className="timeline-row" id={`row-${year}`}>
 			<div className="timeline-row__months">
 				{MONTH_LABELS.map((monthLabel, monthIndex) => (
 					<span
