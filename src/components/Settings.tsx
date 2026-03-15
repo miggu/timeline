@@ -127,7 +127,9 @@ export function Settings({
 							type="button"
 							onClick={handleDeleteButtonClick}
 						>
-							{isDeleteConfirming ? "I am sure" : "Delete all data"}
+							{isDeleteConfirming
+								? "I am sure, DELETE!"
+								: "Delete all data"}
 						</button>
 					</div>
 				</div>

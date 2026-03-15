@@ -80,6 +80,7 @@
 	font-weight: 600;
 	line-height: 1;
 	padding: 0.62rem 0.78rem;
+	white-space: nowrap;
 	cursor: pointer;
 	transition:
 		border-color 0.2s ease,
@@ -113,6 +114,7 @@
 	background: var(--danger-color);
 	border-color: var(--danger-color);
 	color: #fff;
+	font-size: 0.72rem;
 }
 
 .settings__button--danger-confirming:hover,
@@ -164,7 +166,7 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	color: #dde7f6;
+	color: var(--text-primary);
 	transform: translateY(-50%);
 }
 
@@ -190,6 +192,11 @@
 	stroke-width: 2;
 	stroke-linecap: round;
 	stroke-linejoin: round;
+}
+
+.theme-switch__glyph--filled {
+	fill: currentColor;
+	stroke: none;
 }
 
 .theme-switch--checked .theme-switch__track {
