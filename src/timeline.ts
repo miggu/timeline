@@ -164,8 +164,8 @@ export const toTimelineEventRecord = (
 	event: TimelineEvent,
 ): TimelineEventRecord => ({
 	id: event.id,
-	startDate: getIsoDateForDay(event.year, event.beginDay),
-	endDate: getIsoDateForDay(event.year, event.endDay),
+	dateStart: getIsoDateForDay(event.year, event.beginDay),
+	dateEnd: getIsoDateForDay(event.year, event.endDay),
 	colorIndex: event.colorIndex,
 	label: event.label,
 	lane: event.lane,

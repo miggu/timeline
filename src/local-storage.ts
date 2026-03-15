@@ -4,7 +4,7 @@ import {
 	getDaysInYear,
 	toTimelineEventRecord,
 } from "./timeline";
-import type { ThemeMode, TimelineEvent, TimelineEventRecord } from "./types";
+import type { ThemeMode, TimelineEvent } from "./types";
 
 const THEME_STORAGE_KEY = "timeline-theme";
 const EVENTS_STORAGE_KEY = "timeline-events";
@@ -52,6 +52,17 @@ type LegacyTimelineEvent = {
 	widthPercent?: number;
 };
 
+type StoredTimelineEventRecord = {
+	id: string;
+	colorIndex: number;
+	label: string;
+	lane: number;
+	endDate?: string;
+	startDate?: string;
+	dateEnd?: string;
+	dateStart?: string;
+};
+
 const readStoredJson = (storageKey: string) => {
 	if (typeof window === "undefined") {
 		return null;
@@ -97,17 +108,20 @@ const isLegacyTimelineEvent = (value: unknown): value is LegacyTimelineEvent => 
 
 const isTimelineEventRecord = (
 	value: unknown,
-): value is TimelineEventRecord => {
+): value is StoredTimelineEventRecord => {
 	if (!value || typeof value !== "object") {
 		return false;
 	}
 
-	const event = value as TimelineEventRecord;
+	const event = value as StoredTimelineEventRecord;
+	const hasDateRange =
+		(typeof event.dateStart === "string" &&
+			typeof event.dateEnd === "string") ||
+		(typeof event.startDate === "string" && typeof event.endDate === "string");
 
 	return (
 		typeof event.id === "string" &&
-		typeof event.startDate === "string" &&
-		typeof event.endDate === "string" &&
+		hasDateRange &&
 		typeof event.colorIndex === "number" &&
 		typeof event.label === "string" &&
 		typeof event.lane === "number"
@@ -159,10 +173,17 @@ const normalizeLegacyTimelineEvent = (
 };
 
 const normalizeTimelineEventRecord = (
-	event: TimelineEventRecord,
+	event: StoredTimelineEventRecord,
 ): TimelineEvent | null => {
-	const startDate = getDatePosition(event.startDate);
-	const endDate = getDatePosition(event.endDate);
+	const dateStart = event.dateStart ?? event.startDate;
+	const dateEnd = event.dateEnd ?? event.endDate;
+
+	if (!dateStart || !dateEnd) {
+		return null;
+	}
+
+	const startDate = getDatePosition(dateStart);
+	const endDate = getDatePosition(dateEnd);
 
 	if (!startDate || !endDate || startDate.year !== endDate.year) {
 		return null;

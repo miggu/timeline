@@ -10,8 +10,8 @@ export interface TimelineEvent {
 
 export interface TimelineEventRecord {
 	id: string;
-	startDate: string;
-	endDate: string;
+	dateStart: string;
+	dateEnd: string;
 	colorIndex: number;
 	label: string;
 	lane: number;
