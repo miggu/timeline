@@ -1,4 +1,4 @@
-import type { ResizeEdge, TimelineEvent } from "./types";
+import type { ResizeEdge, TimelineEvent, TimelineEventRecord } from "./types";
 
 export const WEEK_COUNT = 52;
 export const YEAR_PLACEHOLDER_COLUMN_COUNT = 1;
@@ -17,6 +17,8 @@ export const EVENT_COLOR_PALETTE = [
 	{ color: "#D99B29", glow: "rgba(217, 155, 41, 0.28)" },
 	{ color: "#A6771F", glow: "rgba(166, 119, 31, 0.28)" },
 ] as const;
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const clamp = (value: number, min: number, max: number) =>
 	Math.min(Math.max(value, min), max);
@@ -24,6 +26,11 @@ const clamp = (value: number, min: number, max: number) =>
 const roundPercent = (value: number) => Number(value.toFixed(6));
 const getDayOffset = (year: number, day: number) =>
 	(clamp(day, 1, getDaysInYear(year)) - 1) / getDaysInYear(year);
+const getTrackPositionPercent = (year: number, day: number) =>
+	roundPercent(
+		getTrackPlaceholderPercent() +
+			getDayOffset(year, day) * getTrackTimelinePercent(),
+	);
 const doIntervalsOverlap = (
 	beginA: number,
 	endA: number,
@@ -36,13 +43,19 @@ export const getDaysInYear = (year: number) =>
 
 export const getDayOfYear = (date: Date) => {
 	const startOfYear = new Date(date.getFullYear(), 0, 1);
-	const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
 	return (
 		Math.floor(
-			(date.getTime() - startOfYear.getTime()) / millisecondsPerDay,
+			(date.getTime() - startOfYear.getTime()) / MILLISECONDS_PER_DAY,
 		) + 1
 	);
+};
+
+const getUtcDayOfYear = (year: number, monthIndex: number, day: number) => {
+	const startOfYear = Date.UTC(year, 0, 1);
+	const timestamp = Date.UTC(year, monthIndex, day);
+
+	return Math.floor((timestamp - startOfYear) / MILLISECONDS_PER_DAY) + 1;
 };
 
 export const getTrackPlaceholderPercent = () =>
@@ -95,10 +108,7 @@ export const getEventDurationDays = (event: TimelineEvent) =>
 	event.endDay - event.beginDay + 1;
 
 export const getEventLeftPercent = (year: number, beginDay: number) =>
-	roundPercent(
-		getTrackPlaceholderPercent() +
-			getDayOffset(year, beginDay) * getTrackTimelinePercent(),
-	);
+	getTrackPositionPercent(year, beginDay);
 
 export const getEventWidthPercent = (
 	year: number,
@@ -114,17 +124,52 @@ export const getEventWidthPercent = (
 	);
 
 export const getMonthStartPercent = (year: number, monthIndex: number) =>
-	roundPercent(
-		getTrackPlaceholderPercent() +
-			getDayOffset(year, getDayOfYear(new Date(year, monthIndex, 1))) *
-				getTrackTimelinePercent(),
-	);
+	getTrackPositionPercent(year, getDayOfYear(new Date(year, monthIndex, 1)));
 
 export const getDayPositionPercent = (year: number, day: number) =>
-	roundPercent(
-		getTrackPlaceholderPercent() +
-			getDayOffset(year, day) * getTrackTimelinePercent(),
-	);
+	getTrackPositionPercent(year, day);
+
+export const getIsoDateForDay = (year: number, day: number) =>
+	new Date(Date.UTC(year, 0, clamp(day, 1, getDaysInYear(year))))
+		.toISOString()
+		.slice(0, 10);
+
+export const getDatePosition = (isoDate: string) => {
+	const match = isoDate.match(ISO_DATE_PATTERN);
+
+	if (!match) {
+		return null;
+	}
+
+	const year = Number.parseInt(match[1], 10);
+	const month = Number.parseInt(match[2], 10);
+	const day = Number.parseInt(match[3], 10);
+	const utcDate = new Date(Date.UTC(year, month - 1, day));
+
+	if (
+		utcDate.getUTCFullYear() !== year ||
+		utcDate.getUTCMonth() !== month - 1 ||
+		utcDate.getUTCDate() !== day
+	) {
+		return null;
+	}
+
+	return {
+		year,
+		dayOfYear: getUtcDayOfYear(year, month - 1, day),
+	};
+};
+
+export const toTimelineEventRecord = (
+	event: TimelineEvent,
+): TimelineEventRecord => ({
+	id: event.id,
+	startDate: getIsoDateForDay(event.year, event.beginDay),
+	endDate: getIsoDateForDay(event.year, event.endDay),
+	colorIndex: event.colorIndex,
+	label: event.label,
+	lane: event.lane,
+});
 
 const clampEventRange = (
 	year: number,

@@ -8,10 +8,19 @@ export interface TimelineEvent {
 	lane: number;
 }
 
+export interface TimelineEventRecord {
+	id: string;
+	startDate: string;
+	endDate: string;
+	colorIndex: number;
+	label: string;
+	lane: number;
+}
+
 export type ResizeEdge = "start" | "end";
 export type ThemeMode = "light" | "dark";
 
 export interface TimelineExportData {
 	exportedAt: string;
-	events: TimelineEvent[];
+	events: TimelineEventRecord[];
 }

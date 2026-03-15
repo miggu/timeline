@@ -1,5 +1,10 @@
-import { MIN_EVENT_DURATION_DAYS, getDaysInYear } from "./timeline";
-import type { ThemeMode, TimelineEvent } from "./types";
+import {
+	MIN_EVENT_DURATION_DAYS,
+	getDatePosition,
+	getDaysInYear,
+	toTimelineEventRecord,
+} from "./timeline";
+import type { ThemeMode, TimelineEvent, TimelineEventRecord } from "./types";
 
 const THEME_STORAGE_KEY = "timeline-theme";
 const EVENTS_STORAGE_KEY = "timeline-events";
@@ -35,7 +40,7 @@ export const DEFAULT_EVENTS: TimelineEvent[] = [
 	},
 ];
 
-type StoredTimelineEvent = {
+type LegacyTimelineEvent = {
 	id: string;
 	year: number;
 	colorIndex: number;
@@ -68,12 +73,12 @@ const readStoredJson = (storageKey: string) => {
 const clamp = (value: number, min: number, max: number) =>
 	Math.min(Math.max(value, min), max);
 
-const isTimelineEvent = (value: unknown): value is StoredTimelineEvent => {
+const isLegacyTimelineEvent = (value: unknown): value is LegacyTimelineEvent => {
 	if (!value || typeof value !== "object") {
 		return false;
 	}
 
-	const event = value as StoredTimelineEvent;
+	const event = value as LegacyTimelineEvent;
 	const hasDayRange =
 		typeof event.beginDay === "number" && typeof event.endDay === "number";
 	const hasLegacyRange =
@@ -90,7 +95,28 @@ const isTimelineEvent = (value: unknown): value is StoredTimelineEvent => {
 	);
 };
 
-const normalizeTimelineEvent = (event: StoredTimelineEvent): TimelineEvent => {
+const isTimelineEventRecord = (
+	value: unknown,
+): value is TimelineEventRecord => {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+
+	const event = value as TimelineEventRecord;
+
+	return (
+		typeof event.id === "string" &&
+		typeof event.startDate === "string" &&
+		typeof event.endDate === "string" &&
+		typeof event.colorIndex === "number" &&
+		typeof event.label === "string" &&
+		typeof event.lane === "number"
+	);
+};
+
+const normalizeLegacyTimelineEvent = (
+	event: LegacyTimelineEvent,
+): TimelineEvent => {
 	const dayCount = getDaysInYear(event.year);
 	const label = typeof event.label === "string" ? event.label.trimEnd() : "";
 	const lane = typeof event.lane === "number" ? event.lane : 0;
@@ -132,6 +158,43 @@ const normalizeTimelineEvent = (event: StoredTimelineEvent): TimelineEvent => {
 	};
 };
 
+const normalizeTimelineEventRecord = (
+	event: TimelineEventRecord,
+): TimelineEvent | null => {
+	const startDate = getDatePosition(event.startDate);
+	const endDate = getDatePosition(event.endDate);
+
+	if (!startDate || !endDate || startDate.year !== endDate.year) {
+		return null;
+	}
+
+	const dayCount = getDaysInYear(startDate.year);
+	const beginDay = clamp(startDate.dayOfYear, 1, dayCount);
+	const endDay = clamp(endDate.dayOfYear, beginDay, dayCount);
+
+	return {
+		id: event.id,
+		year: startDate.year,
+		beginDay,
+		endDay,
+		colorIndex: event.colorIndex,
+		label: event.label.trimEnd(),
+		lane: event.lane,
+	};
+};
+
+const normalizeStoredTimelineEvent = (value: unknown): TimelineEvent | null => {
+	if (isTimelineEventRecord(value)) {
+		return normalizeTimelineEventRecord(value);
+	}
+
+	if (isLegacyTimelineEvent(value)) {
+		return normalizeLegacyTimelineEvent(value);
+	}
+
+	return null;
+};
+
 export const getStoredThemeMode = (): ThemeMode => {
 	if (typeof window === "undefined") {
 		return "light";
@@ -157,8 +220,14 @@ export const setStoredThemeMode = (themeMode: ThemeMode) => {
 export const getStoredEvents = () => {
 	const storedValue = readStoredJson(EVENTS_STORAGE_KEY);
 
-	if (Array.isArray(storedValue) && storedValue.every(isTimelineEvent)) {
-		return storedValue.map(normalizeTimelineEvent);
+	if (Array.isArray(storedValue)) {
+		const normalizedEvents = storedValue
+			.map(normalizeStoredTimelineEvent)
+			.filter((event): event is TimelineEvent => event !== null);
+
+		if (normalizedEvents.length > 0 || storedValue.length === 0) {
+			return normalizedEvents;
+		}
 	}
 
 	return DEFAULT_EVENTS;
@@ -169,7 +238,10 @@ export const setStoredEvents = (events: TimelineEvent[]) => {
 		return;
 	}
 
-	window.localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+	window.localStorage.setItem(
+		EVENTS_STORAGE_KEY,
+		JSON.stringify(events.map(toTimelineEventRecord)),
+	);
 	window.localStorage.removeItem(LEGACY_OLDEST_YEAR_STORAGE_KEY);
 };
 

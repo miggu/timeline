@@ -38,6 +38,7 @@ import {
   getTrackTimelineWidth,
   moveTimelineEventToWeek,
   resizeTimelineEvent,
+  toTimelineEventRecord,
 } from "./timeline";
 
 interface ActiveDragState {
@@ -350,9 +351,13 @@ function App() {
     setActiveResize(null);
   };
 
-  const handleStartEditing = (id: string) => {
+  const clearActiveInteractions = () => {
     clearActiveDrag();
     clearActiveResize();
+  };
+
+  const handleStartEditing = (id: string) => {
+    clearActiveInteractions();
     setEditingEventId(id);
   };
 
@@ -384,8 +389,7 @@ function App() {
       prev.filter((timelineEvent) => timelineEvent.id !== id),
     );
     setEditingEventId((currentId) => (currentId === id ? null : currentId));
-    clearActiveDrag();
-    clearActiveResize();
+    clearActiveInteractions();
   };
 
   const handleResizeStart = (
@@ -402,7 +406,7 @@ function App() {
       return;
     }
 
-    clearActiveDrag();
+    clearActiveInteractions();
     setEditingEventId(null);
     setActiveResize({
       id,
@@ -440,8 +444,7 @@ function App() {
       return;
     }
 
-    clearActiveDrag();
-    clearActiveResize();
+    clearActiveInteractions();
     setSuppressedEditEventId(null);
     setEditingEventId(pendingCreatedEventId);
     pendingCreatedEventIdRef.current = null;
@@ -644,14 +647,16 @@ function App() {
   const handleExportTimeline = () => {
     const exportPayload: TimelineExportData = {
       exportedAt: new Date().toISOString(),
-      events: [...events].sort(
-        (left, right) =>
-          left.year - right.year ||
-          left.lane - right.lane ||
-          left.beginDay - right.beginDay ||
-          left.endDay - right.endDay ||
-          left.id.localeCompare(right.id),
-      ),
+      events: [...events]
+        .sort(
+          (left, right) =>
+            left.year - right.year ||
+            left.lane - right.lane ||
+            left.beginDay - right.beginDay ||
+            left.endDay - right.endDay ||
+            left.id.localeCompare(right.id),
+        )
+        .map(toTimelineEventRecord),
     };
     const exportBlob = new Blob([JSON.stringify(exportPayload, null, 2)], {
       type: "application/json",
@@ -671,8 +676,7 @@ function App() {
 
   const handleDeleteAllData = () => {
     clearStoredTimelineData();
-    clearActiveDrag();
-    clearActiveResize();
+    clearActiveInteractions();
     pendingCreatedEventIdRef.current = null;
     setEditingEventId(null);
     setSuppressedEditEventId(null);
