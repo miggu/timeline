@@ -303,45 +303,24 @@ export const findAvailableLane = (
 	endDay: number,
 	excludedId?: string,
 ) => {
-	const overlappingEvents = events.filter(
-		(event) =>
-			event.id !== excludedId &&
-			event.year === year &&
-			doIntervalsOverlap(
-				event.beginDay,
-				event.endDay,
-				beginDay,
-				endDay,
-			),
-	);
+	for (let lane = 0; lane < MAX_EVENT_LANES; lane += 1) {
+		const isBlocked = events.some(
+			(event) =>
+				event.id !== excludedId &&
+				event.year === year &&
+				event.lane === lane &&
+				doIntervalsOverlap(
+					event.beginDay,
+					event.endDay,
+					beginDay,
+					endDay,
+				),
+		);
 
-	if (overlappingEvents.length === 0) {
-		return 0;
+		if (!isBlocked) {
+			return lane;
+		}
 	}
 
-	const nextLane =
-		Math.max(...overlappingEvents.map((event) => event.lane)) + 1;
-
-	if (nextLane >= MAX_EVENT_LANES) {
-		return null;
-	}
-
-	const isLaneBlocked = events.some(
-		(event) =>
-			event.id !== excludedId &&
-			event.year === year &&
-			event.lane === nextLane &&
-			doIntervalsOverlap(
-				event.beginDay,
-				event.endDay,
-				beginDay,
-				endDay,
-			),
-	);
-
-	if (isLaneBlocked) {
-		return null;
-	}
-
-	return nextLane;
+	return null;
 };
